@@ -1,0 +1,19 @@
+{
+  "name": "@ligant/bench-engines",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The shared, deterministic calculation engines every Ligant Bench Tool calls (E1 to E19 of the tool programme). One implementation per engine in the suite. Research use only.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ligant-AI/bench-engines.git"
+  },
+  "exports": {},
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

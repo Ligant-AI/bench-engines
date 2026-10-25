@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.tgz
+
+# Independent verification evidence: never committed to this repository
+verification/fixtures/
+verification/cleanroom/
+reimpl/
