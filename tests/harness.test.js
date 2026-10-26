@@ -53,7 +53,8 @@ test('harness: URS F-01 chained concentrations call', () => {
 test('harness: chained call merges incomplete across stages in argument order', () => {
   const r = one('concentrations', { live: ['5', null], dead: ['1', '1'], P: null, A: '1', d: ' ' });
   assert.equal(r.status, 'incomplete');
-  assert.deepEqual(r.incomplete, ['live[1]', 'P', 'd']);
+  assert.deepEqual(r.incomplete, ['live', 'P', 'd']);
+  assert.deepEqual(r.incompleteIndices, [1]);
   assert.deepEqual(r.values, {});
   assert.equal('display' in r, false);
 });
@@ -124,10 +125,32 @@ test('harness: viability and poissonCV displays; RF-07 and RF-06', () => {
   assert.equal(one('seedingVolumes', { rho: '1', Vfinal: '1', Clive: '0' }).rejection.code, 'CCS-RF-07');
 });
 
+test('harness: Q7 args null and non-array live/dead are error cases, the rest still returned', () => {
+  const out = run([
+    { id: 'n', fn: 'squareVolume', args: null },
+    { id: 'l', fn: 'meanPerSquare', args: { live: '5', dead: ['1'] } },
+    { id: 'd', fn: 'meanPerSquare', args: { live: ['5'], dead: { 0: '1' } } },
+    { id: 'c', fn: 'concentrations', args: { live: 5, dead: ['1'], P: '2', A: '1', d: '0.1' } },
+    { id: 'ok', fn: 'squareVolume', args: { A: '1', d: '0.1' } },
+  ]);
+  assert.deepEqual(out.map((r) => r.id), ['n', 'l', 'd', 'c', 'ok']);
+  assert.deepEqual(out.map((r) => r.status), ['error', 'error', 'error', 'error', 'result']);
+});
+
+test('harness: Q8 text members are 40-significant-digit truncated strings; Q6 moduleVersion is joined text', () => {
+  const r = one('splitVolumes', { Vnew: '1', N: '3' });
+  assert.equal(r.values.Vtr, '0.' + '3'.repeat(40));
+  assert.equal(typeof r.values.Vmedium, 'string');
+  const v = one('version', {});
+  assert.equal(typeof v.engine.moduleVersion, 'string');
+  assert.ok(v.engine.moduleVersion.includes(', '));
+});
+
 test('harness: meanPerSquare blank entry is incomplete with the square named', () => {
   const r = one('meanPerSquare', { live: ['1', ' ', '3'], dead: ['0', '1', null] });
   assert.equal(r.status, 'incomplete');
-  assert.deepEqual(r.incomplete, ['live[1]', 'dead[2]']);
+  assert.deepEqual(r.incomplete, ['live', 'dead']);
+  assert.deepEqual(r.incompleteIndices, [1, 2]);
   const bad = one('meanPerSquare', { live: ['1', '2.5'], dead: ['0', '1'] });
   assert.equal(bad.status, 'rejected');
   assert.deepEqual(bad.rejection.fields, ['live']);

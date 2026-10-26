@@ -35,12 +35,14 @@ export function meanPerSquare(live, dead) {
     return rejected(M, 'CCS-RF-03', [!Array.isArray(live) && 'live', !Array.isArray(dead) && 'dead'].filter(Boolean));
   }
   // Step 1 (spec 2, 4.2; NAD-2026-10-26-30): a null or blank square entry is incomplete (RF-01).
+  // Adacs (T-0006 Q3): `missing` names the list; the zero-based positions travel in the
+  // parallel member `missingIndices` (ascending), which the harness renames incompleteIndices.
   const gaps = [];
   const gapIdx = new Set();
   [['live', live], ['dead', dead]].forEach(([name, list]) => list.forEach((v, i) => {
-    if (isBlank(v)) { gaps.push(`${name}[${i}]`); gapIdx.add(i); }
+    if (isBlank(v)) { if (!gaps.includes(name)) gaps.push(name); gapIdx.add(i); }
   }));
-  if (gaps.length) return { ...incomplete(M, gaps), indices: [...gapIdx].sort((x, y) => x - y) };
+  if (gaps.length) return { ...incomplete(M, gaps), missingIndices: [...gapIdx].sort((x, y) => x - y) };
   if (live.length === 0 || dead.length === 0 || live.length !== dead.length) {
     const fields = [];
     if (live.length === 0 || live.length !== dead.length) fields.push('live');

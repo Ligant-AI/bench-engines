@@ -7,7 +7,39 @@ import { readFileSync } from 'node:fs';
 import { e9, e7, e10, version } from '../src/index.js';
 
 // Members of the engine's flat result that are not numeric values.
-const META = new Set(['status', 'code', 'fields', 'indices', 'missing', 'flags', 'engine']);
+const META = new Set(['status', 'code', 'fields', 'indices', 'missing', 'missingIndices', 'flags', 'engine']);
+
+// PROTOCOL 7 / P2: argument names and kinds per function. n = numeric TEXT (or null),
+// b = boolean (or null), s = text (or null), l = list of text (or null elements).
+const SHAPE = {
+  strengthFactor: { P: 'n', dyeNamed: 'b' },
+  splitVolumes: { Vnew: 'n', N: 'n' },
+  squareVolume: { A: 'n', d: 'n' },
+  meanPerSquare: { live: 'l', dead: 'l' },
+  concentrations: { live: 'l', dead: 'l', P: 'n', A: 'n', d: 'n' },
+  viability: { sumLive: 'n', sumDead: 'n' },
+  totalCells: { Clive: 'n', Ctotal: 'n', Vsusp: 'n', timing: 's', Valiquot: 'n' },
+  seedingVolumes: { rho: 'n', Vfinal: 'n', Clive: 'n' },
+  x10Comparison: { Vsq: 'n' },
+  poissonCV: { sumLive: 'n', sumDead: 'n' },
+  display: { mode: 's', value: 'n' },
+  version: {},
+};
+const text = (v) => v === null || typeof v === 'string';
+const KIND = {
+  n: text,
+  s: text,
+  b: (v) => v === null || typeof v === 'boolean',
+  l: (v) => v === null || (Array.isArray(v) && v.every(text)),
+};
+function checkArgs(fn, args) {
+  if (args === null || typeof args !== 'object' || Array.isArray(args)) throw new Error('args is not an object');
+  const shape = SHAPE[fn];
+  for (const [key, value] of Object.entries(args)) {
+    if (!Object.hasOwn(shape, key)) throw new Error(`unexpected argument: ${key}`);
+    if (value !== undefined && !KIND[shape[key]](value)) throw new Error(`argument ${key} has the wrong type`);
+  }
+}
 
 // Display mode per named value (PROTOCOL section 4 table). A lookup, not a computation.
 const MODE = {
@@ -24,13 +56,15 @@ const bodyOf = (r) => Object.fromEntries(Object.entries(r).filter(([key]) => !ME
 
 function engineOfPackage() {
   const v = version();
-  return { package: v.package, version: v.version, moduleVersion: v.modules };
+  const lines = Object.entries(v.modules).map(([name, line]) => `${name} ${line}`);
+  return { package: v.package, version: v.version, moduleVersion: lines.join(', ') };
 }
 
 function envelope(id, r) {
   const out = { id, status: r.status, incomplete: [], rejection: null, flags: [], values: {}, engine: r.engine };
   if (r.status === 'incomplete') {
     out.incomplete = r.missing;
+    if (r.missingIndices) out.incompleteIndices = r.missingIndices;
     return out;
   }
   if (r.status === 'rejected') {
@@ -43,7 +77,7 @@ function envelope(id, r) {
   out.values = bodyOf(r);
   out.display = {};
   for (const [name, value] of Object.entries(out.values)) {
-    if (typeof value === 'number' && MODE[name]) out.display[name] = e9.display(MODE[name], value);
+    if (value !== null && MODE[name]) out.display[name] = e9.display(MODE[name], value);
   }
   return out;
 }
@@ -58,7 +92,9 @@ function concentrationsChain(id, a) {
   const stages = [mean, strength, square];
   const gaps = stages.filter((s) => s.status === 'incomplete');
   if (gaps.length) {
-    return { id, status: 'incomplete', incomplete: gaps.flatMap((s) => s.missing), rejection: null, flags: [], values: {}, engine: gaps[0].engine };
+    const res = { id, status: 'incomplete', incomplete: gaps.flatMap((s) => s.missing), rejection: null, flags: [], values: {}, engine: gaps[0].engine };
+    if (mean.missingIndices) res.incompleteIndices = mean.missingIndices;
+    return res;
   }
   const bad = stages.filter((s) => s.status === 'rejected');
   if (bad.length) {
@@ -100,7 +136,9 @@ function runCase(c) {
   try {
     const run = Object.hasOwn(RUN, c.fn) ? RUN[c.fn] : null;
     if (!run) throw new Error(`unknown fn: ${String(c.fn)}`);
-    return run(id, c.args ?? {});
+    const args = c.args === undefined ? {} : c.args;
+    checkArgs(c.fn, args);
+    return run(id, args);
   } catch (e) {
     let engine = null;
     try { engine = engineOfPackage(); } catch { engine = null; }

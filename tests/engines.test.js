@@ -8,7 +8,7 @@ const X = '×';
 test('F-01 chain: square volume, mean, concentrations, viability, CV', () => {
   const vsq = e9.squareVolume('1', '0.1');
   assert.equal(vsq.status, 'result');
-  assert.equal(vsq.Vsq, 0.1);
+  assert.equal(vsq.Vsq, '0.1'); // spec :21 text member, not a float
   const m = e9.meanPerSquare(['86', '94', '90', '90'], ['8', '12', '10', '10']);
   assert.deepEqual([m.nSq, m.sumLive, m.sumDead, m.Lbar, m.Dbar], [4, 360, 40, 90, 10]);
   const f = e10.strengthFactor('2', false);
@@ -66,7 +66,7 @@ test('splitVolumes: Vtr = Vnew/N, medium = Vnew - Vtr; N = 1 allowed', () => {
   assert.equal(Object.is(one.Vmedium, 0), true);
   assert.equal(e9.display('sig3', String(one.Vmedium)), '0');
   assert.deepEqual(e10.splitVolumes('0', '0.5').fields, ['Vnew', 'N']);
-  assert.equal(e10.splitVolumes('1', '3').Vtr, 1 / 3);
+  assert.equal(e10.splitVolumes('1', '3').Vtr, '0.' + '3'.repeat(40)); // Q8: 40 significant digits, truncated
 });
 
 test('meanPerSquare: refusals with indices; no SD returned', () => {
@@ -203,8 +203,10 @@ test('spec 4.5: Clive = 0 is a result; Ctotal <= 0 and Clive < 0 are RF-03', () 
 test('spec 4.2: blank square entry is RF-01 incomplete, before any RF-03', () => {
   const r = e9.meanPerSquare(['1', null, '3'], ['0', '1', '']);
   assert.equal(r.status, 'incomplete');
-  assert.deepEqual(r.missing, ['live[1]', 'dead[2]']);
-  assert.deepEqual(r.indices, [1, 2]);
+  assert.deepEqual(r.missing, ['live', 'dead']);
+  assert.deepEqual(r.missingIndices, [1, 2]);
+  // Q3: union is ascending even when the blanks are in different lists
+  assert.deepEqual(e9.meanPerSquare(['1', '2', null], ['', '1', '1']).missingIndices, [0, 2]);
   // blank wins over a negative count and over unequal length
   assert.equal(e9.meanPerSquare(['-1', ' '], ['0']).status, 'incomplete');
   assert.equal(e9.meanPerSquare(['-1'], ['0']).status, 'rejected');

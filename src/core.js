@@ -56,14 +56,32 @@ export function parse(v) {
   return PLAIN.test(s) ? fromPlain(s) : null;
 }
 
+// A result member (spec 2 Arithmetic; PROTOCOL 3 `values`): a JS number only when the
+// decimal-exact value is exactly a double (power-of-two denominator, at most 53 significant
+// bits); otherwise decimal text (plain digits, no exponent). A non-terminating value is cut at
+// 40 significant digits (truncated).
+function binaryExact(r) {
+  if ((r.d & (r.d - 1n)) !== 0n) return false;
+  let t = r.n < 0n ? -r.n : r.n;
+  if (t.toString(2).length > 1000 || r.d.toString(2).length > 1000) return false;
+  while ((t & 1n) === 0n) t >>= 1n;
+  return t.toString(2).length <= 53;
+}
+
 export function toNumber(r) {
   if (r.n === 0n) return 0;
+  if (binaryExact(r)) return Number(r.n) / Number(r.d);
   const neg = r.n < 0n;
   const n = neg ? -r.n : r.n;
   const k = 40 - (n.toString().length - r.d.toString().length);
-  const q = k >= 0 ? (n * 10n ** BigInt(k)) / r.d : n / (r.d * 10n ** BigInt(-k));
-  const x = Number(`${q}e${-k}`);
-  return neg ? -x : x;
+  const q = (k >= 0 ? (n * 10n ** BigInt(k)) / r.d : n / (r.d * 10n ** BigInt(-k))).toString();
+  let body;
+  if (k <= 0) body = q + '0'.repeat(-k);
+  else {
+    const s = q.padStart(k + 1, '0');
+    body = `${s.slice(0, s.length - k)}.${s.slice(s.length - k)}`.replace(/0+$/, '').replace(/\.$/, '');
+  }
+  return neg ? `-${body}` : body;
 }
 
 export const incomplete = (module, missing) => ({ status: 'incomplete', missing, engine: engineBlock(module) });
