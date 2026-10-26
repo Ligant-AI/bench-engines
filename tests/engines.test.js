@@ -178,8 +178,64 @@ test('display: modes, ties, carry, zero', () => {
   assert.throws(() => d('sci4', '1'));
 });
 
-test('x10Comparison is held for G2: stub throws', () => {
-  assert.throws(() => e9.x10Comparison('0.1'), /not built: held for G2/);
+test('S-1: derived refusals name their fields in argument order', () => {
+  assert.deepEqual(e9.totalCells('1', '2', '10', 'before', '10').fields, ['Vsusp', 'Valiquot']);
+  assert.deepEqual(e9.totalCells('1', '2', '10', 'before', '11').fields, ['Vsusp', 'Valiquot']);
+  const rf5 = e9.seedingVolumes('2000', '5', '1000');
+  assert.equal(rf5.code, 'CCS-RF-05');
+  assert.deepEqual(rf5.fields, ['rho', 'Clive']);
+  assert.deepEqual(rf5.indices, []);
+  const rf6 = e9.viability({ sumLive: '0', sumDead: '0' });
+  assert.deepEqual(rf6.fields, ['sumLive', 'sumDead']);
+  assert.deepEqual(rf6.indices, []);
+  assert.deepEqual(e9.concentrations(0, 0, 2, 0.1, 0, 0).fields, ['sumLive', 'sumDead']);
+  const rf7 = e9.seedingVolumes('1', '5', '0');
+  assert.equal(rf7.code, 'CCS-RF-07');
+  assert.deepEqual(rf7.fields, ['Clive']);
+  assert.deepEqual(rf7.indices, []);
+  const cv7 = e7.poissonCV({ sumLive: '0', sumDead: '3' });
+  assert.equal(cv7.code, 'CCS-RF-07');
+  assert.deepEqual(cv7.fields, ['sumLive']);
+  assert.deepEqual(cv7.indices, []);
+});
+
+test('S-3: empty list and unequal lengths name the lists, indices empty', () => {
+  const empty = e9.meanPerSquare([], []);
+  assert.equal(empty.code, 'CCS-RF-03');
+  assert.deepEqual(empty.fields, ['live', 'dead']);
+  assert.deepEqual(empty.indices, []);
+  const oneEmpty = e9.meanPerSquare([], ['1']);
+  assert.equal(oneEmpty.code, 'CCS-RF-03');
+  assert.ok(oneEmpty.fields.includes('live'));
+  assert.deepEqual(oneEmpty.indices, []);
+  const uneq = e9.meanPerSquare(['1'], ['1', '2']);
+  assert.equal(uneq.code, 'CCS-RF-03');
+  assert.deepEqual(uneq.fields, ['live', 'dead']);
+  assert.deepEqual(uneq.indices, []);
+});
+
+test('S-4: unrecognised timing is incomplete [timing], never a default', () => {
+  for (const t of ['Before', 'during', 'x', 5]) {
+    const r = e9.totalCells('1', '2', '10', t, '4');
+    assert.equal(r.status, 'incomplete', String(t));
+    assert.deepEqual(r.missing, ['timing']);
+  }
+  assert.equal(e9.totalCells('1', '2', '10', '', null).status, 'incomplete');
+  assert.deepEqual(e9.totalCells('1', '2', null, 'during', null).missing, ['Vsusp', 'timing']);
+  // with "after", Valiquot is not evaluated
+  assert.equal(e9.totalCells('1', '2', '10', 'after', '-3').status, 'result');
+});
+
+test('S-6: Clive null is incomplete; negative or malformed is RF-03 [Clive]', () => {
+  assert.deepEqual(e9.seedingVolumes('1', '5', null).missing, ['Clive']);
+  assert.equal(e9.seedingVolumes('1', '5', null).status, 'incomplete');
+  for (const bad of ['-1', '2e5', 'abc', '1,5']) {
+    const r = e9.seedingVolumes('1', '5', bad);
+    assert.equal(r.status, 'rejected', bad);
+    assert.equal(r.code, 'CCS-RF-03', bad);
+    assert.deepEqual(r.fields, ['Clive']);
+  }
+  assert.equal(e9.seedingVolumes('1', '5', '0').code, 'CCS-RF-07');
 });
 
 test('spec 0.1.0: version string and version()', () => {

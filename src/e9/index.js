@@ -97,15 +97,15 @@ export function viability({ sumLive, sumDead } = {}) {
 // 4.5: cells in the suspension, and live cells left after an aliquot taken "before". CCS-DT-06.
 export function totalCells(Clive, Ctotal, Vsusp, timing, Valiquot) {
   const before = timing === 'before';
-  const miss = missingOf([['Clive', Clive], ['Ctotal', Ctotal], ['Vsusp', Vsusp], ['timing', timing], ...(before ? [['Valiquot', Valiquot]] : [])]);
+  const miss = missingOf([['Clive', Clive], ['Ctotal', Ctotal], ['Vsusp', Vsusp], ['timing', before || timing === 'after' ? timing : null], ...(before ? [['Valiquot', Valiquot]] : [])]);
   if (miss.length) return incomplete(M, miss);
   const cl = num(Clive, nonneg);
   const ct = num(Ctotal, pos); // Ctotal <= 0 is RF-03; Clive = 0 is a result (RF-07 is seedingVolumes' only)
   const vs = num(Vsusp, pos);
   const va = before ? num(Valiquot, pos) : ZERO;
-  const bad = [!cl && 'Clive', !ct && 'Ctotal', !vs && 'Vsusp', timing !== 'before' && timing !== 'after' && 'timing', before && !va && 'Valiquot'].filter(Boolean);
+  const bad = [!cl && 'Clive', !ct && 'Ctotal', !vs && 'Vsusp', before && !va && 'Valiquot'].filter(Boolean);
   if (bad.length) return rejected(M, 'CCS-RF-03', bad);
-  if (before && cmp(va, vs) >= 0) return rejected(M, 'CCS-RF-04', ['Valiquot', 'Vsusp']);
+  if (before && cmp(va, vs) >= 0) return rejected(M, 'CCS-RF-04', ['Vsusp', 'Valiquot']);
   return done(M, {
     liveCells: toNumber(mul(cl, vs)),
     allCells: toNumber(mul(ct, vs)),
@@ -126,16 +126,11 @@ export function seedingVolumes(rho, Vfinal, Clive) {
   const needed = mul(r, vf);
   const vseed = div(needed, c);
   if (cmp(r, c) > 0) {
-    return rejected(M, 'CCS-RF-05', ['rho'], [], { Vseed: toNumber(vseed), Vfinal: toNumber(vf), Clive: toNumber(c) });
+    return rejected(M, 'CCS-RF-05', ['rho', 'Clive'], [], { Vseed: toNumber(vseed), Vfinal: toNumber(vf), Clive: toNumber(c) });
   }
   return done(M, {
     cellsNeeded: toNumber(needed), Vseed: toNumber(vseed), Vmed: toNumber(sub(vf, vseed)),
     flags: cmp(r, c) === 0 ? ['CCS-FL-06'] : [],
   });
-}
-
-// 4.7 HELD for G2 (scope record not signed). Not built.
-export function x10Comparison() {
-  throw new Error('not built: held for G2');
 }
 
