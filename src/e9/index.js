@@ -47,6 +47,13 @@ export function meanPerSquare(live, dead) {
     const fields = [];
     if (live.length === 0 || live.length !== dead.length) fields.push('live');
     if (dead.length === 0 || live.length !== dead.length) fields.push('dead');
+    // ADC-2026-10-26-117 (spec 4.2/S-3): unequal lengths WITH element faults carry the ascending
+    // union of fault indices; empty lists, or unequal lengths with no element fault, keep [].
+    const bad = new Set();
+    if (live.length > 0 && dead.length > 0) {
+      [live, dead].forEach((list) => list.forEach((v, i) => { if (!num(v, count)) bad.add(i); }));
+    }
+    if (bad.size) return rejected(M, 'CCS-RF-03', ['live', 'dead'], [...bad].sort((x, y) => x - y));
     return rejected(M, 'CCS-RF-03', fields);
   }
   const fields = [];

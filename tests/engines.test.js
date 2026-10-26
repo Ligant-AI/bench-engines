@@ -268,6 +268,21 @@ test('spec 4.2: blank square entry is RF-01 incomplete, before any RF-03', () =>
   assert.equal(e9.meanPerSquare(['-1'], ['0']).status, 'rejected');
 });
 
+test('spec 4.2/S-3 (ADC-117): unequal lengths with element faults carry the fault-index union', () => {
+  const r = e9.meanPerSquare(['1', '-2', '3'], ['4', '5']);
+  assert.equal(r.status, 'rejected');
+  assert.equal(r.code, 'CCS-RF-03');
+  assert.deepEqual(r.fields, ['live', 'dead']);
+  assert.deepEqual(r.indices, [1]);
+  // ascending union across lists, each index once
+  const u = e9.meanPerSquare(['1', '2', '3.5', '4'], ['x1', '2', '-3']);
+  assert.deepEqual(u.indices, [0, 2]);
+  assert.deepEqual(u.fields, ['live', 'dead']);
+  // unequal with no element fault, and empty lists, keep []
+  assert.deepEqual(e9.meanPerSquare(['1', '2', '3'], ['1', '2']).indices, []);
+  assert.deepEqual(e9.meanPerSquare([], []).indices, []);
+});
+
 test('spec 2: flat refusal shape, indices always present; RF-05 context members flat', () => {
   const r = e9.seedingVolumes('2000', '5', '1000');
   assert.equal(r.status, 'rejected');
