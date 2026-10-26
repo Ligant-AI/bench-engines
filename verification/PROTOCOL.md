@@ -3,6 +3,7 @@
 | Field | Value |
 |---|---|
 | Status | **DRAFT 0, T-0041, Atlas, 26 Oct 2026.** Bound to C10 URS **v0.5, signed 26 Oct 2026 09:58, sha256 `0058fabdc71da39d94f1a68547ccb8fcab224bb481984f478286c6ca612f33ea`**. The engine specification (`engine-spec-draft.md`) is still unsigned (Nadira to sign). Adacs confirms the bound and the conventions (G3); residuals ADC-2026-10-26-17 and NAD-2026-10-26-19, -20 applied |
+| History | 26 Oct 2026: applied ADC-2026-10-26-18 (harness mapping sentence) and -19 (`rejection.context`, not compared). 26 Oct 2026: applied NAD-2026-10-26-30 (null or blank list element is RF-01 `incomplete`, P1). |
 | Read at | benchtools-OS `a93c710`; bench-engines `28e4b03`; C10 `578572c` |
 | Model | C8 `verification/PROTOCOL.md` Protocol 1.0 (frame only: running, ownership, statuses, conventions list). C8's numeric grammar and its 1e-15 bound are NOT copied (sections 3 and 5) |
 | Destination | `bench-engines/verification/PROTOCOL.md`, placed by the main session after NADIRA signs the URS and the engine specification and before `c10-cleanroom` and `c10-fixture-author` are tasked. The builder does not edit it; Atlas does not edit it after placing |
@@ -98,6 +99,8 @@ Fixed by the URS (CCS-UN-01): concentration cells/mL; volumes mL; square volume 
 - **`rejection.code`** is a URS refusal ID: `CCS-RF-03`, `CCS-RF-04`, `CCS-RF-05`, `CCS-RF-06`, `CCS-RF-07`. `CCS-RF-01` appears only as `incomplete`. Messages are not compared (the wording is the page's; RF-05's ruled wording is tested at C10 page level).
 - **`engine`** is compared exactly on `package` and `version` (CCS-OU-05, -10). `moduleVersion` is compared for presence only.
 - **Absence of a numeric result** on `incomplete` or `rejected`: `values` is `{}`.
+- **Harness mapping (ADC-2026-10-26-18).** This section is the harness mapping (`run-engine.mjs`) of the engine's flat result (spec section 2): rename/regroup only, flat numeric members into `values`, `code`/`fields`/`indices` into `rejection`, `missing` into `incomplete`; no arithmetic, rounding, defaulting or version text (G8).
+- **`rejection.context` (ADC-2026-10-26-19).** On a refusal the engine may return extra members (for example `Vseed`, `Vfinal`, `Clive` on CCS-RF-05). The harness moves them to `rejection.context`, which is not compared and never in `values`.
 
 ### 3.1 Refusal triggers that the black box must reproduce
 
@@ -167,7 +170,7 @@ Three classes only (R3). Basis: the engine returns doubles or strings; the clean
 
 ## 6. Conventions the URS leaves to the build (P-list; every item is a proposal for Adacs)
 
-1. **P1, order and count of refusals** (ADC-2026-10-26-08, Q-ES-06). Per call: (1) any required arg `null` or blank gives `incomplete`, listing every missing field in argument order, and nothing else is evaluated (RF-01 blocks all). (2) Otherwise all RF-03 conditions found in that call are reported together as one `rejection` with every offending field in argument order and every offending list index ascending. (3) Derived refusals (RF-04, RF-05, RF-06, RF-07) are evaluated only when the inputs they depend on passed step 2, so one function call never returns two codes, and `rejection` stays a single object. (4) Page level (protocol-c10): `rejections` is a list, one entry per active refusal per the URS section 5 table, ordered by the table's row order, each naming its field; an `incomplete` result suppresses all of them. A blocked output is listed with the refusal sentence in place of the number (URS section 5). A list element that is `null` or blank is not tested in 1.0 (the URS is silent).
+1. **P1, order and count of refusals** (ADC-2026-10-26-08, Q-ES-06). Per call: (1) any required arg `null` or blank gives `incomplete`, listing every missing field in argument order, and nothing else is evaluated (RF-01 blocks all). (2) Otherwise all RF-03 conditions found in that call are reported together as one `rejection` with every offending field in argument order and every offending list index ascending. (3) Derived refusals (RF-04, RF-05, RF-06, RF-07) are evaluated only when the inputs they depend on passed step 2, so one function call never returns two codes, and `rejection` stays a single object. (4) Page level (protocol-c10): `rejections` is a list, one entry per active refusal per the URS section 5 table, ordered by the table's row order, each naming its field; an `incomplete` result suppresses all of them. A blocked output is listed with the refusal sentence in place of the number (URS section 5). A list element that is `null` or blank is `incomplete` (CCS-RF-01), naming the square index (NAD-2026-10-26-30).
 2. **P2, errors:** an implementation that fails on a case reports `error` for that case and returns every other result. A refusal is never an `error`; an exception is never mapped to a refusal.
 3. **P3, blank is not declared:** null, empty or whitespace-only text.
 4. **P4, whole counts:** a count is whole when its decimal value is an integer.
