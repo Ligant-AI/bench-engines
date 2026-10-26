@@ -4,7 +4,9 @@ import {
   incomplete, rejected, done, missingOf, display as displayValue, DISPLAY_MODES,
 } from '../core.js';
 
-const M = 'E9';
+export const MODULE = 'E9';
+export const MODULE_VERSION = '0.0.0';
+const M = MODULE;
 const ZERO = R(0);
 const num = (v, test) => { const r = parse(v); return r && test(r) ? r : null; };
 const pos = (r) => cmp(r, ZERO) > 0;

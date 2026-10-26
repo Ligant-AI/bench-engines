@@ -1,7 +1,9 @@
 // E7: the Poisson counting CV only. Spec section 5. No count window, no thresholds.
 import { R, cmp, isInt, parse, incomplete, rejected, done, missingOf } from '../core.js';
 
-const M = 'E7';
+export const MODULE = 'E7';
+export const MODULE_VERSION = '0.0.0';
+const M = MODULE;
 
 // 5.1: CV% = 100 / sqrt(N), N = sum of live counts. CCS-DT-07, CCS-FL-05.
 export function poissonCV({ sumLive, sumDead } = {}) {

@@ -1,7 +1,9 @@
 // E10: dilution arithmetic (the subset C10 uses). Spec section 3.
 import { R, cmp, div, sub, parse, toNumber, incomplete, rejected, done, missingOf } from '../core.js';
 
-const M = 'E10';
+export const MODULE = 'E10';
+export const MODULE_VERSION = '0.0.0';
+const M = MODULE;
 
 // 3.1: f = P, "1 part cell suspension in P parts total". CCS-DT-01, CCS-FL-01.
 export function strengthFactor(P, dyeNamed = null) {
