@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Status | **DRAFT 0, T-0041, Atlas, 26 Oct 2026.** Bound to C10 URS **v0.5, signed 26 Oct 2026 09:58, sha256 `0058fabdc71da39d94f1a68547ccb8fcab224bb481984f478286c6ca612f33ea`**. The engine specification (`engine-spec-draft.md`) is still unsigned (Nadira to sign). Adacs confirms the bound and the conventions (G3); residuals ADC-2026-10-26-17 and NAD-2026-10-26-19, -20 applied |
-| History | 26 Oct 2026: applied ADC-2026-10-26-18 (harness mapping sentence) and -19 (`rejection.context`, not compared). 26 Oct 2026: applied NAD-2026-10-26-30 (null or blank list element is RF-01 `incomplete`, P1). |
+| History | 26 Oct 2026: applied ADC-2026-10-26-18 (harness mapping sentence) and -19 (`rejection.context`, not compared). 26 Oct 2026: applied NAD-2026-10-26-30 (null or blank list element is RF-01 `incomplete`, P1). 26 Oct 2026: applied S-3 and S-7 (ADC-2026-10-26-105, -106, -107, NAD-2026-10-26-49, -50, -51). |
 | Read at | benchtools-OS `a93c710`; bench-engines `28e4b03`; C10 `578572c` |
 | Model | C8 `verification/PROTOCOL.md` Protocol 1.0 (frame only: running, ownership, statuses, conventions list). C8's numeric grammar and its 1e-15 bound are NOT copied (sections 3 and 5) |
 | Destination | `bench-engines/verification/PROTOCOL.md`, placed by the main session after NADIRA signs the URS and the engine specification and before `c10-cleanroom` and `c10-fixture-author` are tasked. The builder does not edit it; Atlas does not edit it after placing |
@@ -60,7 +60,7 @@ Absence: `null` means not declared (CCS-RF-01). It differs from every answer. Bl
 | `splitVolumes` | `{Vnew, N}` | 3.2 | CCS-DT-09, IN-10 |
 | `squareVolume` | `{A, d}` | 4.1 | CCS-DT-02 |
 | `meanPerSquare` | `{live: [..], dead: [..]}` | 4.2 | CCS-DT-03, IN-04 |
-| `concentrations` | `{live[], dead[], P, A, d}`, tested as the chained black-box call. The harness chains the exported functions in order `meanPerSquare -> strengthFactor -> squareVolume -> concentrations` and contains no arithmetic of its own; acceptance greps `run-engine.mjs` for operators on numbers at G8, any hit is a G8 FAIL (second engine copy). `strengthFactor`, `squareVolume`, `meanPerSquare` are also cases in their own right (ADC-2026-10-26-09) | 4.3 (signature stays `(Lbar, Dbar, f, Vsq, sumLive, sumDead)`) | CCS-DT-04 (Q-C10-23 ruled NAD-2026-10-26-05) |
+| `concentrations` | `{live[], dead[], P, A, d}`, tested as the chained black-box call. The harness chains the exported functions in order `meanPerSquare -> strengthFactor -> squareVolume -> concentrations` and contains no arithmetic of its own; acceptance greps `run-engine.mjs` for operators on numbers at G8, any hit is a G8 FAIL (second engine copy). `strengthFactor`, `squareVolume`, `meanPerSquare` are also cases in their own right (ADC-2026-10-26-09). In the chained call the refusing function for CCS-RF-06 is `concentrations` (engine specification section 2, S-1; ADC-2026-10-26-33). | 4.3 (signature stays `(Lbar, Dbar, f, Vsq, sumLive, sumDead)`) | CCS-DT-04 (Q-C10-23 ruled NAD-2026-10-26-05) |
 | `viability` | `{sumLive, sumDead}` (not lists; summing lists is `meanPerSquare`'s job; ADC-2026-10-26-09) | 4.4 | CCS-DT-05 (Q-C10-17 ruled NAD-2026-10-26-08) |
 | `totalCells` | `{Clive, Ctotal, Vsusp, timing, Valiquot}` | 4.5 | CCS-DT-06, IN-08, FL-04 |
 | `seedingVolumes` | `{rho, Vfinal, Clive}` | 4.6 | CCS-DT-08 (Q-C10-24 ruled NAD-2026-10-26-06; per-cm² out of 1.0, NAD-2026-10-26-01) |
@@ -86,6 +86,7 @@ Fixed by the URS (CCS-UN-01): concentration cells/mL; volumes mL; square volume 
   "id": "BE-...",
   "status": "result" | "incomplete" | "rejected" | "error",
   "incomplete": ["Vsusp"],               // field names; [] unless incomplete (CCS-RF-01)
+  "incompleteIndices": [],  // zero-based, ascending; [] unless incomplete from a null or blank list element (S-7)
   "rejection":  { "code": "CCS-RF-03", "fields": ["P"], "indices": [] } | null,
   "flags":      ["CCS-FL-01"],           // codes only; [] if none
   "values":     { "<name>": <unrounded> },
@@ -99,7 +100,7 @@ Fixed by the URS (CCS-UN-01): concentration cells/mL; volumes mL; square volume 
 - **`rejection.code`** is a URS refusal ID: `CCS-RF-03`, `CCS-RF-04`, `CCS-RF-05`, `CCS-RF-06`, `CCS-RF-07`. `CCS-RF-01` appears only as `incomplete`. Messages are not compared (the wording is the page's; RF-05's ruled wording is tested at C10 page level).
 - **`engine`** is compared exactly on `package` and `version` (CCS-OU-05, -10). `moduleVersion` is compared for presence only.
 - **Absence of a numeric result** on `incomplete` or `rejected`: `values` is `{}`.
-- **Harness mapping (ADC-2026-10-26-18).** This section is the harness mapping (`run-engine.mjs`) of the engine's flat result (spec section 2): rename/regroup only, flat numeric members into `values`, `code`/`fields`/`indices` into `rejection`, `missing` into `incomplete`; no arithmetic, rounding, defaulting or version text (G8).
+- **Harness mapping (ADC-2026-10-26-18).** This section is the harness mapping (`run-engine.mjs`) of the engine's flat result (spec section 2): rename/regroup only, flat numeric members into `values`, `code`/`fields`/`indices` into `rejection`, `missing` into `incomplete`; no arithmetic, rounding, defaulting or version text (G8). Also `missingIndices` into `incompleteIndices`, a top-level member beside `incomplete`. `incomplete` holds list or field names only (`live`, `dead`), never forms such as `live[1]`. `incompleteIndices` is the ascending union of the zero-based positions of the null or blank elements across the lists named in `missing`, and is `[]` in every other case, including a wholly `null` list (engine specification section 2 and 4.2, S-7; ADC-2026-10-26-36, NAD-2026-10-26-51). This is a rename only (G8).
 - **`rejection.context` (ADC-2026-10-26-19).** On a refusal the engine may return extra members (for example `Vseed`, `Vfinal`, `Clive` on CCS-RF-05). The harness moves them to `rejection.context`, which is not compared and never in `values`.
 
 ### 3.1 Refusal triggers that the black box must reproduce
@@ -110,7 +111,7 @@ Fixed by the URS (CCS-UN-01): concentration cells/mL; volumes mL; square volume 
 | `strengthFactor` | P < 1, or not a number | `rejected`, CCS-RF-03, field `P` | CCS-RF-03 |
 | `splitVolumes` | N < 1, N not a number, Vnew <= 0 | `rejected`, CCS-RF-03 | CCS-RF-03 |
 | `squareVolume` | A <= 0 or d <= 0 | `rejected`, CCS-RF-03 | CCS-RF-03 |
-| `meanPerSquare` | empty list, negative or non-integer count, unequal lengths | `rejected`, CCS-RF-03, `indices` of the square | CCS-RF-03 |
+| `meanPerSquare` | empty list, negative or non-integer count, unequal lengths | `rejected`, CCS-RF-03. For an empty list or lists of unequal length, `fields` names the lists (for unequal lengths both `live` and `dead`) and `indices` is `[]`. `indices` names squares only for element faults (a negative or non-integer count): the union of the offending indices across the lists, ascending, each once, zero-based, with `fields` naming every list that has a fault in argument order (engine specification 4.2, S-3; NAD-2026-10-26-49, -50). | CCS-RF-03 |
 | `viability` | `sumLive` or `sumDead` negative or non-integer (no list-based row; indices removed, ADC-2026-10-26-09) | `rejected`, CCS-RF-03, fields named | CCS-RF-03 |
 | `concentrations`, `viability`, `poissonCV` | sum of live + sum of dead = 0 | `rejected`, CCS-RF-06 | CCS-RF-06 |
 | `poissonCV` | `sumLive` = 0 with `sumDead` above 0 | `rejected`, CCS-RF-07 | CCS-RF-07 |
@@ -170,7 +171,7 @@ Three classes only (R3). Basis: the engine returns doubles or strings; the clean
 
 ## 6. Conventions the URS leaves to the build (P-list; every item is a proposal for Adacs)
 
-1. **P1, order and count of refusals** (ADC-2026-10-26-08, Q-ES-06). Per call: (1) any required arg `null` or blank gives `incomplete`, listing every missing field in argument order, and nothing else is evaluated (RF-01 blocks all). (2) Otherwise all RF-03 conditions found in that call are reported together as one `rejection` with every offending field in argument order and every offending list index ascending. (3) Derived refusals (RF-04, RF-05, RF-06, RF-07) are evaluated only when the inputs they depend on passed step 2, so one function call never returns two codes, and `rejection` stays a single object. (4) Page level (protocol-c10): `rejections` is a list, one entry per active refusal per the URS section 5 table, ordered by the table's row order, each naming its field; an `incomplete` result suppresses all of them. A blocked output is listed with the refusal sentence in place of the number (URS section 5). A list element that is `null` or blank is `incomplete` (CCS-RF-01), naming the square index (NAD-2026-10-26-30).
+1. **P1, order and count of refusals** (ADC-2026-10-26-08, Q-ES-06). Per call: (1) any required arg `null` or blank gives `incomplete`, listing every missing field in argument order, and nothing else is evaluated (RF-01 blocks all). (2) Otherwise all RF-03 conditions found in that call are reported together as one `rejection` with every offending field in argument order and every offending list index ascending. (3) Derived refusals (RF-04, RF-05, RF-06, RF-07) are evaluated only when the inputs they depend on passed step 2, so one function call never returns two codes, and `rejection` stays a single object. (4) Page level (protocol-c10): `rejections` is a list, one entry per active refusal per the URS section 5 table, ordered by the table's row order, each naming its field; an `incomplete` result suppresses all of them. A blocked output is listed with the refusal sentence in place of the number (URS section 5). A list element that is `null` or blank is `incomplete` (CCS-RF-01): `incomplete` names the list (`live` or `dead`), and `incompleteIndices` carries the zero-based positions of those elements, as the ascending union across the lists named (engine specification section 2 and S-7, NAD-2026-10-26-51).
 2. **P2, errors:** an implementation that fails on a case reports `error` for that case and returns every other result. A refusal is never an `error`; an exception is never mapped to a refusal.
 3. **P3, blank is not declared:** null, empty or whitespace-only text.
 4. **P4, whole counts:** a count is whole when its decimal value is an integer.
