@@ -1,11 +1,11 @@
 // E9: counting, viability, totals, seeding, display. Spec section 4 and 6.
 import {
-  R, add, sub, mul, div, cmp, isInt, parse, toNumber,
+  R, isBlank, add, sub, mul, div, cmp, isInt, parse, toNumber,
   incomplete, rejected, done, missingOf, display as displayValue, DISPLAY_MODES,
 } from '../core.js';
 
 export const MODULE = 'E9';
-export const MODULE_VERSION = '0.0.0';
+export const MODULE_VERSION = '0.1.0';
 const M = MODULE;
 const ZERO = R(0);
 const num = (v, test) => { const r = parse(v); return r && test(r) ? r : null; };
@@ -34,6 +34,13 @@ export function meanPerSquare(live, dead) {
   if (!Array.isArray(live) || !Array.isArray(dead)) {
     return rejected(M, 'CCS-RF-03', [!Array.isArray(live) && 'live', !Array.isArray(dead) && 'dead'].filter(Boolean));
   }
+  // Step 1 (spec 2, 4.2; NAD-2026-10-26-30): a null or blank square entry is incomplete (RF-01).
+  const gaps = [];
+  const gapIdx = new Set();
+  [['live', live], ['dead', dead]].forEach(([name, list]) => list.forEach((v, i) => {
+    if (isBlank(v)) { gaps.push(`${name}[${i}]`); gapIdx.add(i); }
+  }));
+  if (gaps.length) return { ...incomplete(M, gaps), indices: [...gapIdx].sort((x, y) => x - y) };
   if (live.length === 0 || dead.length === 0 || live.length !== dead.length) {
     const fields = [];
     if (live.length === 0 || live.length !== dead.length) fields.push('live');
@@ -91,7 +98,7 @@ export function totalCells(Clive, Ctotal, Vsusp, timing, Valiquot) {
   const miss = missingOf([['Clive', Clive], ['Ctotal', Ctotal], ['Vsusp', Vsusp], ['timing', timing], ...(before ? [['Valiquot', Valiquot]] : [])]);
   if (miss.length) return incomplete(M, miss);
   const cl = num(Clive, nonneg);
-  const ct = num(Ctotal, nonneg);
+  const ct = num(Ctotal, pos); // Ctotal <= 0 is RF-03; Clive = 0 is a result (RF-07 is seedingVolumes' only)
   const vs = num(Vsusp, pos);
   const va = before ? num(Valiquot, pos) : ZERO;
   const bad = [!cl && 'Clive', !ct && 'Ctotal', !vs && 'Vsusp', timing !== 'before' && timing !== 'after' && 'timing', before && !va && 'Valiquot'].filter(Boolean);

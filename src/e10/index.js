@@ -2,7 +2,7 @@
 import { R, cmp, div, sub, parse, toNumber, incomplete, rejected, done, missingOf } from '../core.js';
 
 export const MODULE = 'E10';
-export const MODULE_VERSION = '0.0.0';
+export const MODULE_VERSION = '0.1.0';
 const M = MODULE;
 
 // 3.1: f = P, "1 part cell suspension in P parts total". CCS-DT-01, CCS-FL-01.

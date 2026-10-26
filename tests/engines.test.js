@@ -1,7 +1,7 @@
 // Written from the signed spec (sections 2-6) and the URS worked example F-01 only.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { e9, e7, e10, ENGINE_VERSION } from '../src/index.js';
+import { e9, e7, e10, ENGINE_VERSION, version } from '../src/index.js';
 
 const X = '×';
 
@@ -180,4 +180,42 @@ test('display: modes, ties, carry, zero', () => {
 
 test('x10Comparison is held for G2: stub throws', () => {
   assert.throws(() => e9.x10Comparison('0.1'), /not built: held for G2/);
+});
+
+test('spec 0.1.0: version string and version()', () => {
+  assert.equal(ENGINE_VERSION, '0.1.0');
+  assert.equal(e9.squareVolume('1', '0.1').engine.version, '0.1.0');
+  assert.equal(version().version, '0.1.0');
+  assert.equal(version().package, '@ligant/bench-engines');
+});
+
+test('spec 4.5: Clive = 0 is a result; Ctotal <= 0 and Clive < 0 are RF-03', () => {
+  const r = e9.totalCells('0', '5', '10', 'after', null);
+  assert.equal(r.status, 'result');
+  assert.equal(r.liveCells, 0);
+  assert.equal(r.allCells, 50);
+  assert.equal(e9.totalCells('0', '5', '10', 'before', '4').liveRemaining, 0);
+  assert.deepEqual(e9.totalCells('1', '0', '10', 'after', null).fields, ['Ctotal']);
+  assert.equal(e9.totalCells('1', '-1', '10', 'after', null).code, 'CCS-RF-03');
+  assert.deepEqual(e9.totalCells('-1', '5', '10', 'after', null).fields, ['Clive']);
+});
+
+test('spec 4.2: blank square entry is RF-01 incomplete, before any RF-03', () => {
+  const r = e9.meanPerSquare(['1', null, '3'], ['0', '1', '']);
+  assert.equal(r.status, 'incomplete');
+  assert.deepEqual(r.missing, ['live[1]', 'dead[2]']);
+  assert.deepEqual(r.indices, [1, 2]);
+  // blank wins over a negative count and over unequal length
+  assert.equal(e9.meanPerSquare(['-1', ' '], ['0']).status, 'incomplete');
+  assert.equal(e9.meanPerSquare(['-1'], ['0']).status, 'rejected');
+});
+
+test('spec 2: flat refusal shape, indices always present; RF-05 context members flat', () => {
+  const r = e9.seedingVolumes('2000', '5', '1000');
+  assert.equal(r.status, 'rejected');
+  assert.equal(r.code, 'CCS-RF-05');
+  assert.deepEqual(r.indices, []);
+  assert.equal('rejection' in r || 'context' in r || 'values' in r, false);
+  assert.equal(r.Vseed, 10);
+  assert.equal(e10.strengthFactor('0.5').indices.length, 0);
 });

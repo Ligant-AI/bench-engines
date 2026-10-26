@@ -2,7 +2,7 @@
 import { R, cmp, isInt, parse, incomplete, rejected, done, missingOf } from '../core.js';
 
 export const MODULE = 'E7';
-export const MODULE_VERSION = '0.0.0';
+export const MODULE_VERSION = '0.1.0';
 const M = MODULE;
 
 // 5.1: CV% = 100 / sqrt(N), N = sum of live counts. CCS-DT-07, CCS-FL-05.
