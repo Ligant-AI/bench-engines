@@ -61,10 +61,10 @@ function engineOfPackage() {
 }
 
 function envelope(id, r) {
-  const out = { id, status: r.status, incomplete: [], rejection: null, flags: [], values: {}, engine: r.engine };
+  const out = { id, status: r.status, incomplete: [], incompleteIndices: [], rejection: null, flags: [], values: {}, engine: r.engine };
   if (r.status === 'incomplete') {
     out.incomplete = r.missing;
-    if (r.missingIndices) out.incompleteIndices = r.missingIndices;
+    out.incompleteIndices = r.missingIndices ?? [];
     return out;
   }
   if (r.status === 'rejected') {
@@ -92,15 +92,16 @@ function concentrationsChain(id, a) {
   const stages = [mean, strength, square];
   const gaps = stages.filter((s) => s.status === 'incomplete');
   if (gaps.length) {
-    const res = { id, status: 'incomplete', incomplete: gaps.flatMap((s) => s.missing), rejection: null, flags: [], values: {}, engine: gaps[0].engine };
-    if (mean.missingIndices) res.incompleteIndices = mean.missingIndices;
-    return res;
+    return {
+      id, status: 'incomplete', incomplete: gaps.flatMap((s) => s.missing), incompleteIndices: mean.missingIndices ?? [],
+      rejection: null, flags: [], values: {}, engine: gaps[0].engine,
+    };
   }
   const bad = stages.filter((s) => s.status === 'rejected');
   if (bad.length) {
     const first = bad[0];
     return {
-      id, status: 'rejected', incomplete: [], flags: [], values: {}, engine: first.engine,
+      id, status: 'rejected', incomplete: [], incompleteIndices: [], flags: [], values: {}, engine: first.engine,
       rejection: { code: first.code, fields: bad.flatMap((s) => s.fields), indices: mean.indices ?? [] },
     };
   }
@@ -122,11 +123,11 @@ const RUN = {
   x10Comparison: (id, a) => envelope(id, e9.x10Comparison(a.Vsq)),
   poissonCV: (id, a) => envelope(id, e7.poissonCV({ sumLive: a.sumLive, sumDead: a.sumDead })),
   display: (id, a) => ({
-    id, status: 'result', incomplete: [], rejection: null, flags: [], values: {},
+    id, status: 'result', incomplete: [], incompleteIndices: [], rejection: null, flags: [], values: {},
     display: { value: e9.display(a.mode, a.value) }, engine: engineOfPackage(),
   }),
   version: (id) => ({
-    id, status: 'result', incomplete: [], rejection: null, flags: [], values: {}, engine: engineOfPackage(),
+    id, status: 'result', incomplete: [], incompleteIndices: [], rejection: null, flags: [], values: {}, engine: engineOfPackage(),
   }),
 };
 
@@ -142,7 +143,7 @@ function runCase(c) {
   } catch (e) {
     let engine = null;
     try { engine = engineOfPackage(); } catch { engine = null; }
-    return { id, status: 'error', incomplete: [], rejection: null, flags: [], values: {}, engine, message: String(e && e.message) };
+    return { id, status: 'error', incomplete: [], incompleteIndices: [], rejection: null, flags: [], values: {}, engine, message: String(e && e.message) };
   }
 }
 

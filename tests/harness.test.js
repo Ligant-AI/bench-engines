@@ -31,6 +31,16 @@ test('harness: same order, same ids, envelope members on every result', () => {
   }
 });
 
+test('harness: incompleteIndices is present and [] on done, rejected and scalar-missing incomplete results', () => {
+  const out = run([
+    { id: 'a', fn: 'squareVolume', args: { A: '1', d: '0.1' } },
+    { id: 'b', fn: 'splitVolumes', args: { Vnew: '0', N: '2' } },
+    { id: 'c', fn: 'strengthFactor', args: { P: null, dyeNamed: false } },
+  ]);
+  assert.deepEqual(out.map((r) => r.status), ['result', 'rejected', 'incomplete']);
+  for (const r of out) assert.deepEqual(r.incompleteIndices, []);
+});
+
 test('harness: URS F-01 chained concentrations call', () => {
   const r = one('concentrations', { live: ['86', '94', '90', '90'], dead: ['8', '12', '10', '10'], P: '2', A: '1', d: '0.1' });
   assert.equal(r.status, 'result');
