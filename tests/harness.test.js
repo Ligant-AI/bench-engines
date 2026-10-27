@@ -189,16 +189,16 @@ test('harness: display cases carry the string; version carries the engine block'
   assert.ok(v.engine.moduleVersion);
 });
 
-test('harness: an exception, an unknown fn and the held x10Comparison are error (P2); others still returned', () => {
+test('harness: an unknown fn and a bad display mode are error (P2), x10Comparison is now served; others still returned', () => {
   const out = run([
     { id: 'e1', fn: 'x10Comparison', args: { Vsq: '0.1' } },
     { id: 'e2', fn: 'noSuchFunction', args: {} },
     { id: 'e3', fn: 'display', args: { mode: 'sci4', value: '1' } },
     { id: 'ok', fn: 'squareVolume', args: { A: '1', d: '2' } },
   ]);
-  assert.deepEqual(out.map((r) => r.status), ['error', 'error', 'error', 'result']);
+  assert.deepEqual(out.map((r) => r.status), ['result', 'error', 'error', 'result']);
   assert.deepEqual(out.map((r) => r.id), ['e1', 'e2', 'e3', 'ok']);
-  assert.deepEqual(out[0].values, {});
+  assert.equal(out[0].values.direction, 'same');
   assert.equal(out[3].values.Vsq, 2);
 });
 

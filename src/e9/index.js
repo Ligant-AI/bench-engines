@@ -1,6 +1,6 @@
 // E9: counting, viability, totals, seeding, display. Spec section 4 and 6.
 import {
-  R, isBlank, add, sub, mul, div, cmp, isInt, parse, toNumber,
+  R, rat, isBlank, add, sub, mul, div, cmp, isInt, parse, toNumber,
   incomplete, rejected, done, missingOf, display as displayValue, DISPLAY_MODES,
 } from '../core.js';
 
@@ -141,3 +141,18 @@ export function seedingVolumes(rho, Vfinal, Clive) {
   });
 }
 
+// 4.7: data for the teaching line. r = Vsq / 0.1 uL, exact; direction and k; `near` per spec 4.7.
+// Input is plain decimal text only (spec 2 Inputs, ADC-2026-10-26-07): a JS number is CCS-RF-03.
+export function x10Comparison(Vsq) {
+  const miss = missingOf([['Vsq', Vsq]]);
+  if (miss.length) return incomplete(M, miss);
+  const v = typeof Vsq === 'string' ? num(Vsq, pos) : null;
+  if (!v) return rejected(M, 'CCS-RF-03', ['Vsq']);
+  const r = div(v, rat(1n, 10n));
+  const c = cmp(r, R(1));
+  const T = rat(1005n, 1000n);
+  const direction = c === 0 ? 'same' : c > 0 ? 'high' : 'low';
+  const k = c === 0 ? R(1) : c > 0 ? r : div(R(1), r);
+  const near = c > 0 ? cmp(r, T) < 0 : c < 0 ? cmp(mul(T, r), R(1)) > 0 : false;
+  return done(M, { r: toNumber(r), direction, k: toNumber(k), near });
+}
