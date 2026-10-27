@@ -1,3 +1,4 @@
+SIGNED: NAD-2026-10-27-42, 2026-10-27, Nadira (CSO). In force. sha256 of the text below this line: 136f2365f8bc6bb2f22731e99c0accba6af0f6584f0e502d0d621209dd83a6e8.
 # Erratum 2 to the bench-engines 0.1.0 engine specification (DRAFT for Nadira's signature)
 
 **Applies to:** `bench-engines/docs/engine-spec-0.1.0.md`, sha256 `15d0db0a9f3b3d6a7c6349c234af1e6769b5b7d52937ac6a13ed18e927ed90bd` (file byte-identical to da35748), signed NAD-2026-10-26-86.
