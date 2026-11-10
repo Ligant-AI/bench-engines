@@ -4,8 +4,14 @@ import { ENGINE_VERSION } from './version.js';
 
 const PLAIN = /^[+-]?(\d+\.?\d*|\.\d+)$/;
 
+// Each module registers its own MODULE_VERSION at load (core cannot import the modules).
+const MODULE_VERSIONS = new Map();
+export function registerModule(module, moduleVersion) {
+  MODULE_VERSIONS.set(module, moduleVersion);
+}
+
 export function engineBlock(module) {
-  return { package: '@ligant/bench-engines', version: ENGINE_VERSION, module, moduleVersion: '0.1.0' };
+  return { package: '@ligant/bench-engines', version: ENGINE_VERSION, module, moduleVersion: MODULE_VERSIONS.get(module) };
 }
 
 function bgcd(a, b) {

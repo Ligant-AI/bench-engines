@@ -1,8 +1,9 @@
 // E10: dilution arithmetic (the subset C10 uses). Spec section 3.
-import { R, cmp, div, sub, parse, toNumber, incomplete, rejected, done, missingOf } from '../core.js';
+import { R, cmp, div, sub, parse, toNumber, incomplete, rejected, done, missingOf, registerModule } from '../core.js';
 
 export const MODULE = 'E10';
 export const MODULE_VERSION = '0.1.0';
+registerModule(MODULE, MODULE_VERSION);
 const M = MODULE;
 
 // 3.1: f = P, "1 part cell suspension in P parts total". CCS-DT-01, CCS-FL-01.

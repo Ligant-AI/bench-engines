@@ -1,11 +1,12 @@
 // E9: counting, viability, totals, seeding, display. Spec section 4 and 6.
 import {
   R, rat, isBlank, add, sub, mul, div, cmp, isInt, parse, toNumber,
-  incomplete, rejected, done, missingOf, display as displayValue, DISPLAY_MODES,
+  incomplete, rejected, done, missingOf, display as displayValue, DISPLAY_MODES, registerModule,
 } from '../core.js';
 
 export const MODULE = 'E9';
 export const MODULE_VERSION = '0.1.0';
+registerModule(MODULE, MODULE_VERSION);
 const M = MODULE;
 const ZERO = R(0);
 const num = (v, test) => { const r = parse(v); return r && test(r) ? r : null; };
