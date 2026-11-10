@@ -27,7 +27,8 @@ function run(args, wrongFn, compute) {
   const bad = [];
   for (const [k, v, kind] of args) {
     if (kind === 'unit') continue;
-    const r = parse(v);
+    // E10C-IN-01: every numeric input is plain decimal text; a number, bigint, boolean or object is refused
+    const r = typeof v === 'string' ? parse(v) : null;
     if (!r || (kind === 'nonneg' ? cmp(r, ZERO) < 0 : cmp(r, ZERO) <= 0)) bad.push(k);
     else nums[k] = r;
   }

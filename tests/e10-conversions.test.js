@@ -241,7 +241,7 @@ test('AT-E10C-07 wrong-dimension unit and toUnit', () => {
   rej(e10.molesToCopies('1', 'ng', 'copies'), 'E10-RC-02', ['unit']);
 });
 
-test('AT-E10C-20 and -21 massToCopies toUnit', () => {
+test('AT-E10C-20 and -21 massToCopies toUnit (AT-E10C-21: kcopies is unknown, E10-RC-01)', () => {
   rej(e10.massToCopies('1', 'ng', '3250000', 'mol'), 'E10-RC-02', ['toUnit']);
   rej(e10.massToCopies('1', 'ng', '3250000', 'kcopies'), 'E10-RC-01', ['toUnit']);
   rej(e10.molesToCopies('1', 'pmol', 'ng'), 'E10-RC-02', ['toUnit']);
@@ -270,6 +270,46 @@ test('AT-E10C-08 MW null then 0, -5, abc, in the six MW functions', () => {
     assert.deepEqual(n.missing, ['MW']);
     for (const bad of ['0', '-5', 'abc']) rej(f(bad), 'CCS-RF-03', ['MW']);
   }
+});
+
+// ---- E10C-IN-01 (KAITO-2026-11-10-06): numeric inputs are decimal text only ----
+test('E10C-IN-01 a JS number in each numeric argument is rejected CCS-RF-03 naming the field', () => {
+  const N = 5;
+  rej(e10.scaleUnit(N, 'g/L', 'g/L'), 'CCS-RF-03', ['value']);
+  rej(e10.massToMolar(N, 'mg/mL', '1', 'uM'), 'CCS-RF-03', ['c']);
+  rej(e10.massToMolar('1', 'mg/mL', N, 'uM'), 'CCS-RF-03', ['MW']);
+  rej(e10.molarToMass(N, 'nM', '1', 'ug/mL'), 'CCS-RF-03', ['c']);
+  rej(e10.molarToMass('1', 'nM', N, 'ug/mL'), 'CCS-RF-03', ['MW']);
+  rej(e10.massToMoles(N, 'ug', '1', 'pmol'), 'CCS-RF-03', ['m']);
+  rej(e10.massToMoles('1', 'ug', N, 'pmol'), 'CCS-RF-03', ['MW']);
+  rej(e10.molesToMass(N, 'nmol', '1', 'ug'), 'CCS-RF-03', ['n']);
+  rej(e10.molesToMass('1', 'nmol', N, 'ug'), 'CCS-RF-03', ['MW']);
+  rej(e10.molesToCopies(N, 'pmol', 'copies'), 'CCS-RF-03', ['n']);
+  rej(e10.copiesToMoles(N, 'pmol'), 'CCS-RF-03', ['N']);
+  rej(e10.massToCopies(N, 'ng', '1', 'copies'), 'CCS-RF-03', ['m']);
+  rej(e10.massToCopies('1', 'ng', N, 'copies'), 'CCS-RF-03', ['MW']);
+  rej(e10.copiesToMass(N, '1', 'ug'), 'CCS-RF-03', ['N']);
+  rej(e10.copiesToMass('1', N, 'ug'), 'CCS-RF-03', ['MW']);
+  rej(e10.amountFromConcentration(N, 'ng/uL', '1', 'uL', 'ng'), 'CCS-RF-03', ['c']);
+  rej(e10.amountFromConcentration('1', 'ng/uL', N, 'uL', 'ng'), 'CCS-RF-03', ['V']);
+  // both numeric arguments non-text: both named, in argument order
+  rej(e10.massToMolar(N, 'mg/mL', N, 'uM'), 'CCS-RF-03', ['c', 'MW']);
+});
+
+test('E10C-IN-01 a bigint, a boolean and an object are rejected CCS-RF-03', () => {
+  rej(e10.massToMolar(5n, 'mg/mL', '1', 'uM'), 'CCS-RF-03', ['c']);
+  rej(e10.copiesToMoles(5n, 'pmol'), 'CCS-RF-03', ['N']);
+  rej(e10.scaleUnit(true, 'g/L', 'g/L'), 'CCS-RF-03', ['value']);
+  rej(e10.massToCopies('1', 'ng', false, 'copies'), 'CCS-RF-03', ['MW']);
+  rej(e10.molesToMass({}, 'nmol', '1', 'ug'), 'CCS-RF-03', ['n']);
+});
+
+test('E10C-IN-01 a non-text number does not change the order of statuses', () => {
+  const a = e10.massToMolar(5, 'mg/mL', null, 'uM');
+  assert.equal(a.status, 'incomplete');
+  assert.deepEqual(a.missing, ['MW']);
+  rej(e10.massToMolar(5, 'mg/ml', '1', 'uM'), 'E10-RC-01', ['unit']);
+  rej(e10.massToMolar(5, 'nM', '1', 'uM'), 'E10-RC-02', ['unit']);
 });
 
 // ---- AT-E10C-09 / -10 ----
