@@ -6,6 +6,13 @@ export const MODULE_VERSION = '0.1.0';
 registerModule(MODULE, MODULE_VERSION);
 const M = MODULE;
 
+// E10C-F03 to E10C-F12 (docs/engine-spec-e10-conversions.md)
+export {
+  scaleUnit, massToMolar, molarToMass, massToMoles, molesToMass,
+  molesToCopies, copiesToMoles, massToCopies, copiesToMass, amountFromConcentration,
+} from './conversions.js';
+export { UNITS, N_A } from './units.js';
+
 // 3.1: f = P, "1 part cell suspension in P parts total". CCS-DT-01, CCS-FL-01.
 export function strengthFactor(P, dyeNamed = null) {
   const miss = missingOf([['P', P]]);
