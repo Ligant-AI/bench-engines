@@ -151,7 +151,10 @@ export const DISPLAY_MODES = ['sci3', 'sig3', 'sig3trim', 'fixed1', 'fixed2', 'e
 // or on text that is not a plain decimal: a programming error, not a user refusal.
 export function display(mode, value) {
   if (!DISPLAY_MODES.includes(mode)) throw new Error(`unknown display mode: ${mode}`);
-  const r = parse(value);
+  // E10 conversions: an `exact: {num, den}` object (reduced decimal-integer strings) is accepted.
+  const r = value !== null && typeof value === 'object' && typeof value.num === 'string' && typeof value.den === 'string' && /^-?\d+$/.test(value.num) && /^\d+$/.test(value.den) && BigInt(value.den) > 0n
+    ? rat(BigInt(value.num), BigInt(value.den))
+    : parse(value);
   if (!r) throw new Error('display value is not plain decimal text');
   const neg = r.n < 0n;
   const a = neg ? rat(-r.n, r.d) : r;
