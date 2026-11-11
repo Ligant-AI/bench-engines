@@ -91,7 +91,7 @@ Fixed by the URS (CCS-UN-01): concentration cells/mL; volumes mL; square volume 
   "flags":      ["CCS-FL-01"],           // codes only; [] if none
   "values":     { "<name>": <unrounded> },
   "display":    { "<name>": "<string>" },
-  "engine":     { "package": "@ligant/bench-engines", "version": "0.1.0", "module": "E9", "moduleVersion": "..." }
+  "engine":     { "package": "@ligant/bench-engines", "version": "0.1.1", "module": "E9", "moduleVersion": "0.1.0" }
 }
 ```
 

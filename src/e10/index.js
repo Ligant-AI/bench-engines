@@ -2,7 +2,7 @@
 import { R, cmp, div, sub, parse, toNumber, incomplete, rejected, done, missingOf, registerModule } from '../core.js';
 
 export const MODULE = 'E10';
-export const MODULE_VERSION = '0.1.0';
+export const MODULE_VERSION = '0.2.0';
 registerModule(MODULE, MODULE_VERSION);
 const M = MODULE;
 

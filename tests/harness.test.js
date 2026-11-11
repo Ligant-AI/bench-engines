@@ -27,7 +27,7 @@ test('harness: same order, same ids, envelope members on every result', () => {
   for (const r of out) {
     for (const k of ['id', 'status', 'incomplete', 'rejection', 'flags', 'values', 'engine']) assert.ok(k in r, k);
     assert.equal(r.engine.package, '@ligant/bench-engines');
-    assert.equal(r.engine.version, '0.1.0');
+    assert.equal(r.engine.version, '0.1.1');
   }
 });
 
@@ -185,7 +185,7 @@ test('harness: display cases carry the string; version carries the engine block'
   const v = one('version', {});
   assert.equal(v.status, 'result');
   assert.equal(v.engine.package, '@ligant/bench-engines');
-  assert.equal(v.engine.version, '0.1.0');
+  assert.equal(v.engine.version, '0.1.1');
   assert.ok(v.engine.moduleVersion);
 });
 

@@ -54,7 +54,7 @@ export const MUTANTS = [
   { id: 'M33-carry-keeps-exponent', file: 'src/core.js', find: 'm = m / 10n; e++;', replace: 'm = m / 10n;', catchedBy: 'display: modes' },
   { id: 'M34-negative-zero-shown', file: 'src/core.js', find: 'neg && !zero ?', replace: 'neg ?', catchedBy: 'display: modes' },
   { id: 'M35-sci3-plain-x-sign', file: 'src/core.js', find: "body = `${m[0]}.${m.slice(1)} × 10^${e}`", replace: "body = `${m[0]}.${m.slice(1)} x 10^${e}`", catchedBy: 'display: modes' },
-  { id: 'M36-engine-version-drifts', file: 'src/version.js', find: "ENGINE_VERSION = '0.1.0'", replace: "ENGINE_VERSION = '0.1.1'", catchedBy: 'engine version' },
+  { id: 'M36-engine-version-drifts', file: 'src/version.js', find: "ENGINE_VERSION = '0.1.1'", replace: "ENGINE_VERSION = '0.1.2'", catchedBy: 'engine version' },
   // the harness mapping
   { id: 'H01-context-leaks-into-values', file: 'verification/run-engine.mjs', find: 'out.rejection.context = context;', replace: 'out.values = context;', catchedBy: 'RF-05 engine members' },
   { id: 'H02-chain-reports-first-stage-fields-only', file: 'verification/run-engine.mjs', find: 'bad.flatMap((s) => s.fields)', replace: 'first.fields', catchedBy: 'RF-03 once' },
