@@ -238,10 +238,10 @@ test('S-6: Clive null is incomplete; negative or malformed is RF-03 [Clive]', ()
   assert.equal(e9.seedingVolumes('1', '5', '0').code, 'CCS-RF-07');
 });
 
-test('spec 0.1.1: version string and version()', () => {
-  assert.equal(ENGINE_VERSION, '0.1.1');
-  assert.equal(e9.squareVolume('1', '0.1').engine.version, '0.1.1');
-  assert.equal(version().version, '0.1.1');
+test('spec 0.2.0: version string and version()', () => {
+  assert.equal(ENGINE_VERSION, '0.2.0');
+  assert.equal(e9.squareVolume('1', '0.1').engine.version, '0.2.0');
+  assert.equal(version().version, '0.2.0');
   assert.equal(version().package, '@ligant/bench-engines');
 });
 

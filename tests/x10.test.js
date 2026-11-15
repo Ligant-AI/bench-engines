@@ -23,7 +23,7 @@ test('x10Comparison: Vsq "0.1005" gives r 1.005, high, k 1.005 unrounded, shows 
   assert.equal(shown(r), '1.01');
   assert.equal(r.near, false);
   assert.equal(r.engine.module, 'E9');
-  assert.equal(r.engine.version, '0.1.1');
+  assert.equal(r.engine.version, '0.2.0');
 });
 
 test('x10Comparison: high side just below 1.005 is near (shows 1)', () => {

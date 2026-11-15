@@ -146,7 +146,8 @@ test('carry row: 9.995 rounds to 1.00 x 10^1 (AT-E10C-18)', () => {
 
 // ---- AT-E10C-02 / -03 ----
 test('AT-E10C-02 every unit to its base and back (round trip exact)', () => {
-  const bases = { massConc: 'g/L', molarConc: 'M', mass: 'g', amount: 'mol', copies: 'copies', volume: 'L' };
+  // AT-E10R-13: the activity dimensions are table units now; their nominal bases (IU/L, IU/g...) are not tokens, so a token of the dimension stands in
+  const bases = { massConc: 'g/L', molarConc: 'M', mass: 'g', amount: 'mol', copies: 'copies', volume: 'L', actIU: 'IU', actU: 'U', actConcIU: 'IU/mL', actConcU: 'U/mL', saIU: 'IU/mg', saU: 'U/mg' };
   for (const [dim, units] of Object.entries(e10.UNITS)) {
     for (const u of units) {
       const there = e10.scaleUnit('7', u, bases[dim]);

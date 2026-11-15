@@ -4,6 +4,8 @@ The shared calculation engines of the Ligant Bench Tools programme: engines E1 t
 
 **Status (25 October 2026):** an empty skeleton. Nothing is built until the C10 URS is signed. The first modules are the ones C10 Cell Counting and Seeding calls: **E9** (cell counting and seeding), **E7** (the Poisson counting CV only), **E4** (the replicate statistics C10 needs) and **E10** (the dilution arithmetic C10 needs). The rest of train 0 (the remaining E4 and E10 scope, E2 and E16 Tier A, the single least-squares routine) follows C10. See `../Bench-Tools-Programme/train-0-plan.md`.
 
+**Versions (T-0641, KAITO-D187):** package 0.2.0, E10 module 0.3.0, E9 and E7 modules 0.1.0. E10 now holds the conversions (E10C-F03..F12) and the scaling and activity functions E10R-F13..F16, F18..F23 (`scaleToVolume`, `volumeFromAmount`, `balanceVolume`, `percentSolution`, `concentrateVolume`, `roundDeclared`, `activityToMass`, `massToActivity`, `activityAmountFromConcentration`, `volumeFill`), specified in `docs/engine-spec-e10-scaling-activity*.md`.
+
 ## Rules that make this a package and not code in each tool
 
 1. **One implementation in the suite.** A second copy of any engine function inside a tool is refused at acceptance (cat1 NAD-2026-10-24-547(6); -1206; -1209). Tools import from here.

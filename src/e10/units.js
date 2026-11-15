@@ -2,7 +2,7 @@
 // (section 4, E10C-UN-02). Factors are exact powers of ten, held as the exponent k: f = 10^k.
 import { R, rat } from '../core.js';
 
-export const DIMENSIONS = ['massConc', 'molarConc', 'mass', 'amount', 'copies', 'volume'];
+export const DIMENSIONS = ['massConc', 'molarConc', 'mass', 'amount', 'copies', 'volume', 'actIU', 'actU', 'actConcIU', 'actConcU', 'saIU', 'saU'];
 
 // unit -> [dimension, k]   (value in unit x 10^k = value in base unit)
 const ROWS = {
@@ -12,6 +12,13 @@ const ROWS = {
   amount: { mol: 0, mmol: -3, umol: -6, nmol: -9, pmol: -12, fmol: -15, amol: -18 },
   copies: { copies: 0 },
   volume: { L: 0, mL: -3, uL: -6 },
+  // E10R-UN-01 (NAD-2026-11-14-254, -268): activity units; IU and U never meet
+  actIU: { IU: 0 },
+  actU: { U: 0 },
+  actConcIU: { 'IU/mL': 3 },
+  actConcU: { 'U/mL': 3 },
+  saIU: { 'IU/mg': 3, 'IU/ug': 6 },
+  saU: { 'U/mg': 3, 'U/ug': 6 },
 };
 
 const TABLE = new Map();
