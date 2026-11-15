@@ -3,7 +3,7 @@
 | Field | Value |
 |---|---|
 | Status | **DRAFT 0, T-0041, Atlas, 26 Oct 2026.** Bound to C10 URS **v0.5, signed 26 Oct 2026 09:58, sha256 `0058fabdc71da39d94f1a68547ccb8fcab224bb481984f478286c6ca612f33ea`**. The engine specification (`engine-spec-draft.md`) is still unsigned (Nadira to sign). Adacs confirms the bound and the conventions (G3); residuals ADC-2026-10-26-17 and NAD-2026-10-26-19, -20 applied |
-| History | 26 Oct 2026: applied ADC-2026-10-26-18 (harness mapping sentence) and -19 (`rejection.context`, not compared). 26 Oct 2026: applied NAD-2026-10-26-30 (null or blank list element is RF-01 `incomplete`, P1). 26 Oct 2026: applied S-3 and S-7 (ADC-2026-10-26-105, -106, -107, NAD-2026-10-26-49, -50, -51). |
+| History | 26 Oct 2026: applied ADC-2026-10-26-18 (harness mapping sentence) and -19 (`rejection.context`, not compared). 26 Oct 2026: applied NAD-2026-10-26-30 (null or blank list element is RF-01 `incomplete`, P1). 26 Oct 2026: applied S-3 and S-7 (ADC-2026-10-26-105, -106, -107, NAD-2026-10-26-49, -50, -51). 15 Nov 2026: added section 10 (E10R functions), applying Adacs's rulings ADC-2026-11-15-122 to -134 and -140 to -148. |
 | Read at | benchtools-OS `a93c710`; bench-engines `28e4b03`; C10 `578572c` |
 | Model | C8 `verification/PROTOCOL.md` Protocol 1.0 (frame only: running, ownership, statuses, conventions list). C8's numeric grammar and its 1e-15 bound are NOT copied (sections 3 and 5) |
 | Destination | `bench-engines/verification/PROTOCOL.md`, placed by the main session after NADIRA signs the URS and the engine specification and before `c10-cleanroom` and `c10-fixture-author` are tasked. The builder does not edit it; Atlas does not edit it after placing |
@@ -97,11 +97,11 @@ Fixed by the URS (CCS-UN-01): concentration cells/mL; volumes mL; square volume 
 
 - **`values`** carry the names of the engine specification (for example `Lbar`, `Clive`, `Vseed`). `unrounded`: JSON number, or a decimal string where the double cannot hold it. Which one: Adacs (Q-C10-05 residual).
 - **`display`** carries the string per section 4 (URS section 6), computed once from the unrounded value. Not present on `incomplete`, `rejected` or `error`.
-- **`rejection.code`** is a URS refusal ID: `CCS-RF-03`, `CCS-RF-04`, `CCS-RF-05`, `CCS-RF-06`, `CCS-RF-07`. `CCS-RF-01` appears only as `incomplete`. Messages are not compared (the wording is the page's; RF-05's ruled wording is tested at C10 page level).
+- **`rejection.code`** is a URS refusal ID: `CCS-RF-03`, `CCS-RF-04`, `CCS-RF-05`, `CCS-RF-06`, `CCS-RF-07`. `CCS-RF-01` appears only as `incomplete`. Messages are not compared (the wording is the page's; RF-05's ruled wording is tested at C10 page level). For E10R functions see section 10.
 - **`engine`** is compared exactly on `package` and `version` (CCS-OU-05, -10). `moduleVersion` is compared for presence only.
 - **Absence of a numeric result** on `incomplete` or `rejected`: `values` is `{}`.
 - **Harness mapping (ADC-2026-10-26-18).** This section is the harness mapping (`run-engine.mjs`) of the engine's flat result (spec section 2): rename/regroup only, flat numeric members into `values`, `code`/`fields`/`indices` into `rejection`, `missing` into `incomplete`; no arithmetic, rounding, defaulting or version text (G8). Also `missingIndices` into `incompleteIndices`, a top-level member beside `incomplete`. `incomplete` holds list or field names only (`live`, `dead`), never forms such as `live[1]`. `incompleteIndices` is the ascending union of the zero-based positions of the null or blank elements across the lists named in `missing`, and is `[]` in every other case, including a wholly `null` list (engine specification section 2 and 4.2, S-7; ADC-2026-10-26-36, NAD-2026-10-26-51). This is a rename only (G8).
-- **`rejection.context` (ADC-2026-10-26-19).** On a refusal the engine may return extra members (for example `Vseed`, `Vfinal`, `Clive` on CCS-RF-05). The harness moves them to `rejection.context`, which is not compared and never in `values`.
+- **`rejection.context` (ADC-2026-10-26-19).** On a refusal the engine may return extra members (for example `Vseed`, `Vfinal`, `Clive` on CCS-RF-05). The harness moves them to `rejection.context`, which is not compared and never in `values`. For E10R functions see section 10.
 
 ### 3.1 Refusal triggers that the black box must reproduce
 
@@ -209,3 +209,155 @@ The URS states for this input C_live = 90 x 2 x 1000 / 0.1 = 1.8e6, displayed `1
 | Q-C10-25 | NADIRA | Per-cm² seeding cut. Closed: NAD-2026-10-26-01 (stays out of 1.0) |
 
 Open: Q-C10-28 (A.B.), Q-C10-26 (after G7), module placement Q-ES-01 (before the Tue 13:00 freeze). Version rule (ADC-2026-10-26-16): 0.1.0 is fixed at the Tue 13:00 milestone; after it, any change to a reported value, refusal, flag, display string or PROTOCOL output, or a new exported function, moves the version.
+
+---
+
+## 10. E10R functions: carriage to the comparator
+
+Citations: `spec:N` = `engine-spec-e10-scaling-activity.md` line N; `conv:N` = `engine-spec-e10-conversions.md`; `0.1.0:N` = `engine-spec-0.1.0.md`; `AMD-n:N` = `engine-spec-e10-scaling-activity-AMD-n.md` (AMD-2 is the `-r2` file); all in `bench-engines/docs/`. Requirement and rule IDs are internal and never reach a page or export.
+
+### 10.1 Scope and rule of carriage
+
+This section covers the exported functions of E10R (recipe scaling and activity conversion), the E10C functions that E10R rows call, and the E9 `display` function as E10R rows use it (CR-17). It says how each named member of the engine's result reaches the comparator. **The runner passes through only** (RU-2, `.claude/reports/adacs/2026-11-15-t0651-round8-disclosure-runner.md` :36): no row id, no fixture literal, no per-row branch, no arithmetic, no rounding, no defaults. A member the engine does not return is not emitted by the runner. The ordering of statuses, closed strings and refusal triggers are the signed spec's (conv:44; spec:132; AMD-3:37) and are not restated.
+
+For E10R rows this section governs where it differs from section 3. It overrides section 3 only for the message (CR-07, CR-08) and for `partsTotal` and `statedTotal` (CR-14). Section 3 :104 stays in force for every other extra member of a refusal (CR-15). Section 5's 1e-15 bounds do not apply: the signed E10 representation is an exact rational with no tolerance (conv:73).
+
+### 10.2 The rules
+
+**Function names (CR-01).** The runner resolves each of these `fn` strings to the engine export of the same name and calls it with the arguments in the signature order of the spec. No alias and no other name; any other `fn` is a malformed case, `error` (P2). Signed names:
+
+| Function | Source |
+|---|---|
+| `scaleToVolume` (E10R-F13) | spec:163 |
+| `volumeFromAmount` (E10R-F14) | spec:175 |
+| `balanceVolume` (E10R-F15) | spec:186 |
+| `percentSolution` (E10R-F16) | spec:199 |
+| `concentrateVolume` (E10R-F18) | spec:213 |
+| `roundDeclared` (E10R-F19) | spec:224 |
+| `activityToMass` (E10R-F20) | spec:235 |
+| `massToActivity` (E10R-F21) | spec:246 |
+| `activityAmountFromConcentration` (E10R-F22) | spec:257 |
+| `volumeFill` (E10R-F23) | AMD-2:34 |
+| `scaleUnit` (E10C-F03), `amountFromConcentration` (E10C-F12), called by E10R rows | conv:77-128; spec:259, :388 |
+| `display` (E9, `display(mode, value)`) | CR-17 |
+
+**Pass-through (CR-02).** No arithmetic, rounding or defaults in the runner (RU-2). Every member named below is copied from the engine's result unchanged, as the same string, list or object.
+
+**`status` (CR-03).** Carried as the engine's string. Closed set `"result"`, `"incomplete"`, `"rejected"`; `"error"` is the harness's, for a thrown exception or a malformed case, and never maps to a refusal (P2). Compared exactly (string equality). Basis: conv:35, :44; spec:161; PROTOCOL section 6 P2.
+
+**`rejection.code` (CR-04).** Present only when `status` is `"rejected"`. The engine's code string, unchanged. Compared exactly. Possible values: `CCS-RF-03`, `E10-RC-01`, `E10-RC-02`, `E10-RC-03`; `E10-RC-04` is reserved and never returned; `CCS-RF-01` appears only as `incomplete`, never as a `rejection.code`. Basis: conv:35, :39-40; spec:125-131.
+
+**`rejection.fields` (CR-05).** The engine's list of field-name strings, unchanged, in the engine's order. Compared exactly: same length, same strings, same order (argument order is signed). Names include nested and element forms as signed: `SA.lower.relation`, `SA.value`, `parts[i]`, `lines[i]`, `lines[i].unit`, `final.unit`. The runner never splits, reorders, sorts or de-duplicates. Basis: conv:44; spec:132, :243, :460; AMD-2:44; AMD-3:37.
+
+**`rejection.indices` (CR-06).** Every E10 refusal carries `indices` (NAD-2026-11-14-394 (a): 0.1.0:26, conv:20, spec:110). The runner carries `indices` unchanged when the engine returns it and emits none when it does not (RU-2: no default `[]`). What a row may state:
+- **A row may assert `indices: []`** for (NAD-394 (b)): every `CCS-RF-03` refusal (conv:35); every `E10-RC-03` refusal (`fields` is `["parts"]`, spec:129); every `E10-RC-01` or `E10-RC-02` refusal in which **every** named field is a non-element name: a scalar argument (`unit`, `toUnit`, `Vunit`, `fromUnit`, `cUnit`, ...), a closed-string argument (`rule`, `form`, `reference`), or a member of an object (`SA.unit`, `SA.lower.relation`, `final.unit`). `indices` is compared exactly as a list. An E10 refusal under this bullet that lacks `indices` fails a row that states `indices: []` (NAD-394, "For Atlas's CR-06 text": the intended test).
+- **A row states no `indices`** for an `E10-RC-01` or `E10-RC-02` refusal naming **any** element-form field (`parts[i].unit`, `lines[i].unit`, or `parts[i]`, `lines[i]` forms), alone or with other fields. The row still asserts `status`, `code` and `fields`. NAD-394 (c) HOLDS this case until a signed line chooses between `[i]` and `[]`; the amendment sentence that would release it is open item A-1 and is **not rule text**.
+- Quote NAD-2026-11-14-394 beside this rule in the placed text (NAD-394, Adacs condition).
+
+**`rejection.message`, carriage (CR-07).** The runner copies `message` to `rejection.message` on a `rejected` result **only when the engine's result has `message` as an own member and its value is not `undefined`** (`undefined` cannot be written to JSON, so it counts as absent). Any other value is passed through unchanged: `""`, `null`, a non-string, or a string. The runner does not turn `null` or `""` into absent; passing them through is what lets `notPresent` catch them (RU-2, no defaults). It is never put into `rejection.context`. On a status other than `rejected` a `message` is not mapped to `rejection` and falls under CR-15. Basis: ADC-2026-11-15-123; ADC-2026-11-15-95 (i), -96 (2); ADC-2026-11-15-116.
+
+**`rejection.message`, comparison (CR-08).** Three forms of row. `notPresent` names are members of `rejection`; the fixture key is `expect.notPresent: ["message"]`, path base `rejection`.
+- `expect.rejection.message` present: the runner's `rejection.message` must be present and a string, and equal to the expected text by `===` (code-point equality; case, spacing and punctuation matter; no trimming). **If the runner's output has no `message`, the row fails** (it does not pass as "not compared"). A non-string message fails.
+- `expect.notPresent: ["message"]`: the row passes only when `rejection` has no `message` member. Any present `message`, even `""` or `null`, fails the row. Only the absent case passes.
+- A row that states **neither** `expect.rejection.message` nor `expect.notPresent` **passes whatever `message` member the runner returns**: absent, `""`, `null`, a string or a non-string. The comparator must not read, coerce or throw on `rejection.message` for such a row (NAD-2026-11-14-392 as carried by ADC-2026-11-15-123, -130). RU-3 mutants vary the runner's message over five cases (absent, `""`, `null`, a string, a number) and must show: neither-stated passes in all five; `notPresent` passes only on absent; stated message passes only on the exact string (ADC-130).
+
+A row may assert absence only where signed text says there is no message (CR-10).
+
+**Signed message strings (CR-09).** Only these strings are signed as engine messages; a row asserting any other message text has no basis here.
+
+| Refusal | Exact string | Basis |
+|---|---|---|
+| E10-RC-03 (`balanceVolume`, parts over total) | `the parts add up to more than the total` (lowercase, no closing full stop, no quotation marks) | AMD-5:25 (NAD-2026-11-14-371); spec:129 |
+| E10-RC-02, `scaleToVolume` with a concentration `unit` (`mg/mL`, `IU/mL`, `U/mL`) | `a concentration does not scale with the final volume` | spec:173, :460 (Q-E10R-A5). Word-for-word status is Nadira's NAD-2026-11-14-379, quoted in ADC-2026-11-15-115 item 1; I read the quote, not her record |
+| CCS-RF-03 `["SA.lower","SA.upper"]`, equal limits (`activityToMass`, `massToActivity`) | `the two limits are equal; enter it as a single value` | spec:243, :422 (AT-E10R-28) |
+| E10-RC-02, `scaleUnit` from a mass-concentration unit to a molar-concentration unit (conv:40; `g/L` to `M`, conv:87) | **Signed (NAD-2026-11-14-395).** Exact, 41 ASCII characters, lowercase start, no closing full stop, no quotation marks, **no backticks**, byte-exact: `needs a molecular weight, use massToMolar` (the backticks around `massToMolar` in conv:40 are Markdown). The fixture author and clean room take the string from this fence and NAD-395, never from the Markdown of conv:40 | conv:40, :87; spec:460; NAD-395 |
+
+Scope of the `scaleUnit` string: only `fromUnit` a mass-concentration unit and `toUnit` a molar-concentration unit. For every other cross-dimension `scaleUnit` call, signed text gives no message, and no row asserts a message or its absence (NAD-395 Scope). `fields` there is `["fromUnit","toUnit"]` (conversions erratum-1 row 5, :81, as cited by NAD-395).
+
+**Where a row may assert "no message" (CR-10).** `expect.notPresent: ["message"]` is allowed **only where signed text says "no message"**. Today that is `E10-RC-02` `["unit","toUnit"]` for IU meeting U in `scaleToVolume`, in either direction, "with no message" (AMD-4:30; NAD-2026-11-14-365). By the same signed limit, the `scaleToVolume` A5 message belongs to a concentration `unit` only (spec:460); a `scaleToVolume` refusal for a specific-activity or `copies` `unit` is therefore outside the A5 message, as AMD-3 item (4) with spec:460 and ADC-2026-11-15-114 (i) record. For every other refusal whose signed text is silent on a message, **silence is not "none"**: no row asserts `notPresent` and no row asserts a message.
+
+The E10-RC-01 rows (`copies/mL` to `copies/mL`, `copies/uL` to `copies/uL`, `mg/L` to `mg/L`, and the mixed `copies/mL` to `mg/mL`) assert **neither** `notPresent` **nor** a message. They state `status`, `code` and `fields` only. This closes N-3. Quotation, so that a fixture author does not read "no message" as "none": NAD-2026-11-14-392, as put by Nadira at NAD-394 "How this squares with my -392": "-392 ruled that rows may not assert that a message is absent. The message is not a named member of the shape, and silence there is not 'none'." Citation for the E10-RC-01 rows: ADC-2026-11-15-124; ADC-130 (with -388 part (2)).
+
+**`unit` of a result (CR-11).** On a `result` the engine's `unit` string is carried as the output object's top-level `unit`, unchanged (not inside `values`). It is `toUnit` as the caller typed it. Compared exactly. A result with no `unit` in the engine (`percentOfFinal` of E10R-F16; `roundDeclared`, `volumeFill`) gets none. Basis: spec:161, :206, :231, :293 (E10R-OU-01); conv:28.
+
+**`exact` of a result (CR-12).** The engine's `exact` is carried as the top-level `exact`: `{num, den}`, passed unchanged. The comparator checks, on the runner's `exact`, **before** comparing:
+1. **Wire form** (ADC-2026-11-15-125): `num` and `den` are decimal-integer **strings**, not JS numbers; `num` matches `^-?(0|[1-9][0-9]*)$`; `den` matches `^[1-9][0-9]*$`; zero is exactly `"0"` over `"1"`. A runner `exact` that fails this fails the row.
+2. **Equality:** by integer cross-multiplication in **BigInt** (`num_a x den_b == num_b x den_a`), with **no numeric tolerance**. The cross-multiplication is the comparator's, never the runner's.
+
+Lowest terms (`gcd(|num|, den) = 1`, conv:28 "reduced", NAD-2026-11-14-401) is the engine's signed output form and is **not checked by the comparator** (ADC-2026-11-15-140): equality does not depend on it and it catches no wrong number. Negative zero does not exist (the text `"-0"` returns `0`). Basis: conv:28, :42, :73; spec:157, :293; ADC-125.
+
+**`value` of a result (CR-13).** The JS number (or string) `value` is carried unchanged beside `exact` and is **not compared and never used for display or acceptance**. A bare JS number is never compared. Basis: conv:28, :73.
+
+**`partsTotal` and `statedTotal` (CR-14).** Present on `E10-RC-03` only. Each is the engine's `{value, unit, exact: {num, den}}`, both expressed in `toUnit`, in the same unit. The runner copies each object unchanged to the output object's top level, beside `rejection` (spec:129: "the result also carries"; position confirmed by Adacs, ADC-2026-11-15-127, with one schema-only check of fixture key names under RU-1), and never into `rejection.context` or `values`. Comparison per sub-member: `unit` exact string, which must be the same string for both; `exact` as CR-12; `value` not compared (CR-13). Signed figures: `balanceVolume("50","mL",[{"30","mL"},{"25","mL"}],"mL")` gives `partsTotal` 55/1 and `statedTotal` 50/1, mL (spec:336). Basis: spec:129, :403, :443 (Q-E10R-N9, NAD-2026-11-14-270).
+
+**Members not listed (CR-15).** A member of an engine result that is not named in CR-03 to CR-14 and CR-17 is handled by this rule (ADC-2026-11-15-126):
+- **Carriage.** On a **refusal**, an unlisted extra member goes to `rejection.context` as in section 3 :104, and is **not compared**. On a **result**, it is passed through unchanged at the top level.
+- **Comparison (type rule).** When a row states an expected value for a top-level result member, it is compared by the shape of the expected value:
+
+| Shape of the expected member | Compared as |
+|---|---|
+| S-1 a string | exact equality (`===`) |
+| S-2 a list of strings, or of integers | exact ordered list: same length, element-wise `===` |
+| S-3 an object `{num, den}` | CR-12 |
+| S-4 an object whose members are among `value`, `unit`, `relation`, `exact` | each member the row states: `unit` and `relation` exact string; `exact` per CR-12; `value` not compared (CR-13). A member the row states and the runner's object lacks fails the row |
+| S-5 a bare JS number | never compared (CR-13) |
+| S-6 `null` | equals `null` only; a carried object against an expected `null`, or the reverse, fails |
+
+- **A member a row states but the runner does not carry fails the row.**
+- The table below gives each unlisted member its signed shape and line before any such row runs. A member with no signed shape is marked NEEDS NADIRA.
+
+| Member (function) | Signed shape | Compared as | Signed line | Status |
+|---|---|---|---|---|
+| `assumes` (`balanceVolume`; `percentSolution` v/v modes 2 and 3; `volumeFill`) | the string `"additive volumes"`; on every such result; absent where additivity is not assumed; on no refusal | S-1 | spec:195, :206, :294 (E10R-OU-02); AMD-2:43 | Signed |
+| `finalVolume` (`percentSolution` v/v modes 2 and 3) | `{value, unit, exact}` in `toUnit` | S-4 | spec:206 | Signed |
+| `percentOfFinal` (`percentSolution` v/v mode 2) | `{value, exact}`, no unit | S-4 | spec:206 ("Every output is `{value, unit, exact: {num, den}}` ... (`percentOfFinal` has no unit)") | Signed; `{value, exact}` read from spec:206 and compared by S-4 |
+| `solvent` (`percentSolution` w/w) | `{value, unit, exact}`, the solvent mass | S-4 | spec:206 (Q-E10R-N16) | Signed |
+| `form` (`activityToMass`, `massToActivity`, bounded result) | the string `"bounded"` | S-1 | spec:242 | Signed |
+| `lower`, `upper` (bounded result) | each `{value, exact, relation}` or `null`; no top-level `value` or `exact` on a bounded result; `relation` one of `">"`, `">="`, `"<"`, `"<="` | S-4 when an object; S-6 when `null` | spec:242, :253 (E10R-OU-03); relation strings spec:115 | Signed |
+| `fill` (`volumeFill`) | one of the strings `"under"`, `"full"`, `"over"` | S-1 | AMD-2:43 | Signed |
+| `text` (`roundDeclared`) | a decimal string with exactly `places` digits after the point; no point at `places` 0 | S-1 | spec:231 (Result), :230 (Relation) | Signed |
+| `rule` (`roundDeclared`) | the string `"half-up"` or `"half-even"` | S-1 | spec:231; relation strings spec:115 | Signed |
+| `places` (`roundDeclared`) | listed in the result shape at spec:231; its type is not stated by signed text (NAD-2026-11-14-400) | **no row states `places`; the comparator never reads it.** The runner carries it unchanged as the engine returns it | spec:231; NAD-400 | Closed: not compared until an amendment |
+| `engine` (every result) | object `{package, version, module, moduleVersion}`, strings | no row states engine; the runner carries it unchanged at the top level and the comparator never reads it | 0.1.0:30; conv:31 (E10C-NF-05) | Signed shape; ADC-2026-11-15-144 |
+| `missing`, `missingIndices` (an `incomplete` result) | top-level members beside `status`, not inside `rejection`. `missing`: list of field-name strings. `missingIndices`: list of zero-based integers, ascending, only where the engine returns it | S-2 | 0.1.0:27 (S-7) | Signed; position ADC-2026-11-15-143 |
+
+**No tolerance (CR-16).** E10R comparisons are strings, string lists and exact rational equality only. No relative or absolute bound is used. Basis: conv:73 ("no tolerance and no numeric bound").
+
+**`display` (CR-17).** `display` is the E9 export `display(mode, value)` (`src/core.js:152`; read as an export line only, per ADC-2026-11-15-128), signed in 0.1.0 section 6 with six modes `sci3`, `sig3`, `sig3trim`, `fixed1`, `fixed2`, `exact`. Rules (ADC-2026-11-15-128):
+- The runner passes each member of the row's `args` **exactly as the case gives it**, in signature order. It does **not** convert an `{num, den}` pair into decimal text: a conversion is arithmetic and RU-2 forbids it.
+- If a row gives only `exact` and the engine's `display` accepts only text, the case is malformed and the runner returns `error` (P2). The fixture author then supplies the text. This is a fixture change, not a runner workaround. (An engine that accepts an `{num, den}` object receives it as given.)
+- A thrown exception (an unknown mode, or text that is not plain decimal) is `error` (P2), never a refusal.
+- The displayed string is compared as **exact text** (`===`, code-point equality; the `×` of `sci3` is U+00D7).
+- The runner puts the returned string in the output object as the top-level member `display`, unchanged, and nothing else beside it. An exception is `error` (P2). The fixture key `expect.display` is compared by the rule above. The key name is checked once, schema-only, against the fixture key set when the runner is written (RU-1, as ADC-2026-11-15-127); no expected value is read. If the fixture's key differs, the name is changed in this bullet by a new ruling of mine, not by a runner workaround (ADC-2026-11-15-146).
+
+### 10.3 Basis table
+
+| Rule | Member | Compared as | Basis (signed doc line) | Status |
+|---|---|---|---|---|
+| CR-01 | `fn` names | exact name resolves | spec:163, :175, :186, :199, :213, :224, :235, :246, :257; AMD-2:34; conv:77 | Signed |
+| CR-02 | all | pass-through, no arithmetic, rounding or defaults | RU-2 (Adacs); conv:28, :73 | Adacs's |
+| CR-03 | `status` | exact string | conv:35, :44; spec:161 | Signed |
+| CR-04 | `rejection.code` | exact string | conv:35, :39-40; spec:125-131 | Signed |
+| CR-05 | `rejection.fields` | exact ordered list | conv:44; spec:132, :243, :460; AMD-2:44; AMD-3:37 | Signed |
+| CR-06 | `rejection.indices` | exact list; `[]` assertable per NAD-394 (b); none stated for element-field RC-01/-02 rows | 0.1.0:26; conv:20, :35; spec:110, :129, :132; NAD-394 | Ruled (NAD-394); element-field case HELD, no row states it |
+| CR-07 | `rejection.message` carriage | own member; absent only when engine has none or `undefined`; `""`, `null`, non-strings passed through | ADC-123, -95 (i), -96 (2), -116 | Adacs's |
+| CR-08 | `rejection.message` comparison | stated: exact `===`, absent fails; `notPresent`: absent only; neither stated: passes whatever is returned | ADC-123, -130; NAD-392 | Adacs's; NAD-392 |
+| CR-09 | message strings | exact text | AMD-5:25; spec:129, :173, :243, :422, :460; conv:40, :87; NAD-395 | Signed (all four) |
+| CR-10 | rows that may assert no message | `notPresent` only where signed text says none; RC-01 rows assert neither | AMD-4:30; AMD-3 (4); spec:460; NAD-392; ADC-124 | Signed for IU-meets-U; RC-01 closed by NAD-392 |
+| CR-11 | `unit` | exact string | spec:161, :206, :293; conv:28 | Signed |
+| CR-12 | `exact` | wire-form check, then BigInt cross-multiplication, no tolerance; lowest terms not checked (ADC-140, NAD-401) | conv:28, :42, :73; spec:157; ADC-125 | Signed |
+| CR-13 | `value` | not compared | conv:28, :73 | Signed |
+| CR-14 | `partsTotal`, `statedTotal` | `unit` exact; `exact` per CR-12; `value` not compared | spec:129, :336, :403, :443 | Signed; position confirmed ADC-127 |
+| CR-15 | other members | refusal: to `rejection.context`, not compared; result: top level, type rule S-1 to S-6, table above | ADC-126; spec lines in table | Signed shapes; `places` not compared (ADC-142) |
+| CR-16 | tolerance | none | conv:73 | Signed |
+| CR-17 | `display` | args as given; exact text | 0.1.0 section 6; `src/core.js:152` export; ADC-128 | Adacs's; output position ADC-146 |
+
+### 10.4 Open items
+
+| ID | Owner | Item |
+|---|---|---|
+| A-1 | Atlas, Kaito (ticket) | **For a future E10R amendment, not rule text.** Nadira's sentence (NAD-394, "For Atlas"): "Every E10 refusal carries `indices: []`; the position of a failing list element is carried in the field name (`parts[i]`, `lines[i]`, `parts[i].unit`, `lines[i].unit`) and nowhere else." Signed and placed, it releases the held element-field case of CR-06. It returns to Nadira by sha. Also from NAD-395: at the next conversions version, quote the `scaleUnit` message in a fence or without inner backticks. Also from NAD-400, for the E10R-F19 Result row: `rule` and `places` in the result are the `rule` and `places` arguments returned unchanged, as the same strings the caller passed (`places` `"2"` in, `"2"` out); they are never converted to a number. The amendment returns to Nadira by sha. |
+
+Closed since r1: N-1 (NAD-394), N-2 (NAD-395), N-3 (NAD-392 via ADC-124), O-1 (ADC-127), O-2 (CR-17), O-3 (CR-15 and the table), O-4 (placement block), N-4 (NAD-400), O-5 to O-9 (ADC-143, -144, -146, -140, -141).
+
+**Count: 17 rules (CR-01 to CR-17). NEEDS NADIRA: none.**
