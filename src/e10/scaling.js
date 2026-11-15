@@ -72,13 +72,22 @@ export function scaleToVolume(q, unit, Vfrom, VfromUnit, Vto, VtoUnit, toUnit) {
     const fields = [];
     let message;
     const unitOk = SCALABLE.has(d.unit);
-    if (!unitOk) {
-      fields.push('unit');
-      if (CONCENTRATION.has(d.unit)) message = 'a concentration does not scale with the final volume';
-    }
+    // IU meets U, in either direction: every unit field in the meeting is named, no message
+    // (NAD-2026-11-14-365; E10R-AMD-4; AMD-3 :37 (c)).
+    const iuMeetsU = (d.unit === 'actIU' && d.toUnit === 'actU') || (d.unit === 'actU' && d.toUnit === 'actIU');
+    if (!unitOk || iuMeetsU) fields.push('unit');
+    if (!unitOk && CONCENTRATION.has(d.unit)) message = 'a concentration does not scale with the final volume';
     if (d.VfromUnit !== 'volume') fields.push('VfromUnit');
     if (d.VtoUnit !== 'volume') fields.push('VtoUnit');
-    if (unitOk && d.toUnit !== d.unit) fields.push('toUnit');
+    if (unitOk) {
+      // toUnit is judged against unit (AMD-3 :37 (b))
+      if (d.toUnit !== d.unit) fields.push('toUnit');
+    } else if (!SCALABLE.has(d.toUnit)) {
+      // unit is already named under AMD-3 :37 (a), so toUnit is not compared with it and no
+      // IU-meets-U check is made; but F13 never returns a concentration or specific activity,
+      // so toUnit is wrong for its own role, a second independent fault (NAD-2026-11-14-364/-366).
+      fields.push('toUnit');
+    }
     return { fields, message };
   });
   if (stop) return stop;

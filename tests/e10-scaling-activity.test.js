@@ -127,7 +127,14 @@ test('AT-E10R-29 / AT-E10R-01 Example 14 scaleToVolume with an activity amount (
   const r = e10.scaleToVolume('100', 'IU', '100', 'mL', '250', 'mL', 'IU');
   exactIs(r, 250n);
   assert.equal(r.unit, 'IU');
-  rej(e10.scaleToVolume('100', 'IU', '100', 'mL', '250', 'mL', 'U'), 'E10-RC-02', ['toUnit']);
+  // IU meets U: both unit fields (NAD-2026-11-14-365; E10R-AMD-4 replaces r3.1 :352)
+  const iu = e10.scaleToVolume('100', 'IU', '100', 'mL', '250', 'mL', 'U');
+  rej(iu, 'E10-RC-02', ['unit', 'toUnit']);
+  assert.equal('message' in iu, false);
+  // U to IU: same refusal, no message (AMD-3 :37 (c))
+  const ui = e10.scaleToVolume('100', 'U', '100', 'mL', '250', 'mL', 'IU');
+  rej(ui, 'E10-RC-02', ['unit', 'toUnit']);
+  assert.equal('message' in ui, false);
 });
 
 test('AT-E10R-24 Example 15 activityToMass and massToActivity, single SA (E10R-F20, F21)', () => {
@@ -192,7 +199,7 @@ test('AT-E10R-26 Example 20 IU and U never meet (E10R-F20, F21, F13, F15, scaleU
   rej(e10.massToActivity('1', 'ng', SA('10000', 'U/mg'), 'IU'), 'E10-RC-02', ['SA.unit', 'toUnit']);
   rej(e10.scaleUnit('1', 'IU', 'U'), 'E10-RC-02', ['fromUnit', 'toUnit']);
   rej(e10.scaleUnit('1', 'IU/mL', 'U/mL'), 'E10-RC-02', ['fromUnit', 'toUnit']);
-  rej(e10.scaleToVolume('1', 'IU', '1', 'mL', '1', 'mL', 'U'), 'E10-RC-02', ['toUnit']);
+  rej(e10.scaleToVolume('1', 'IU', '1', 'mL', '1', 'mL', 'U'), 'E10-RC-02', ['unit', 'toUnit']);
   rej(e10.balanceVolume('50', 'mL', [{ value: '1', unit: 'IU' }], 'mL'), 'E10-RC-02', ['parts[0].unit']);
   rej(e10.activityToMass('1', 'U', SA('1', 'IU/mg'), 'ng'), 'E10-RC-02', ['aUnit', 'SA.unit']);
 });
@@ -285,11 +292,35 @@ test('AT-E10R-02 zero amount and "-0" give 0, never negative zero (F13, F14, F16
 
 // ---- AT-E10R-03 .. AT-E10R-07 refusals ----
 test('AT-E10R-03 scaleToVolume with a concentration unit (E10R-F13)', () => {
-  for (const u of ['mg/mL', 'IU/mL']) {
+  const MSG = 'a concentration does not scale with the final volume';
+  // a concentration unit with a toUnit that is itself a concentration: toUnit is wrong for its
+  // own role too, so both fields (NAD-2026-11-14-364), with the A5 message (NAD-2026-11-14-366)
+  for (const u of ['mg/mL', 'IU/mL', 'U/mL']) {
     const r = e10.scaleToVolume('1', u, '1', 'mL', '2', 'mL', u);
-    rej(r, 'E10-RC-02', ['unit']);
-    assert.ok(typeof r.message === 'string' && r.message.includes('concentration'));
+    rej(r, 'E10-RC-02', ['unit', 'toUnit']);
+    assert.equal(r.message, MSG);
   }
+  // (i) NAD-2026-11-14-364: IU/mL with an activity-amount toUnit names unit only
+  let r = e10.scaleToVolume('100', 'IU/mL', '100', 'mL', '250', 'mL', 'U');
+  rej(r, 'E10-RC-02', ['unit']);
+  assert.equal(r.message, MSG);
+  // (ii) toUnit a concentration or specific activity: both fields, message
+  for (const t of ['U/mL', 'U/mg', 'U/ug', 'IU/mL', 'mg/mL']) {
+    r = e10.scaleToVolume('100', 'IU/mL', '100', 'mL', '250', 'mL', t);
+    rej(r, 'E10-RC-02', ['unit', 'toUnit']);
+    assert.equal(r.message, MSG);
+  }
+  // NAD-2026-11-14-366: U/mL as unit carries the message, whatever the toUnit's kind
+  r = e10.scaleToVolume('100', 'U/mL', '100', 'mL', '250', 'mL', 'U');
+  rej(r, 'E10-RC-02', ['unit']);
+  assert.equal(r.message, MSG);
+  r = e10.scaleToVolume('100', 'U/mL', '100', 'mL', '250', 'mL', 'IU');
+  rej(r, 'E10-RC-02', ['unit']);
+  assert.equal(r.message, MSG);
+  // a specific-activity unit as unit is refused with no message
+  r = e10.scaleToVolume('100', 'U/mg', '100', 'mL', '250', 'mL', 'U');
+  rej(r, 'E10-RC-02', ['unit']);
+  assert.equal('message' in r, false);
 });
 
 test('AT-E10R-04 volumeFromAmount mismatched pairs (E10R-F14)', () => {
