@@ -1,4 +1,6 @@
 // E20L-F03 mvdFromLimit: MVD = (L x c) / lambda in one exact computation (ELM-DT-04, -DT-12).
+// The reading of the five arguments and the build of the result are separate, so that the
+// result function of E20L-F05 reads the same arguments and builds the same object.
 import { R, mul, div, done } from '../core.js';
 import { MODULE, CLOSED_STRINGS, REASONS, isBlank, isKnown, refusalFor } from './shared.js';
 import { numeric } from './numeric.js';
@@ -11,7 +13,10 @@ function expectedUnit(info) {
   return `${info.label}/mL`;
 }
 
-export function mvdFromLimit(limit, technique, c, cUnit, lambda) {
+// Reads limit, technique, c, cUnit and lambda in argument order. Returns the names that are
+// missing (step 1), unknown or not allowed (step 2), the unit mismatch (step 2) and the value
+// faults (step 3), with the values that were read.
+export function inspectMvd(limit, technique, c, cUnit, lambda) {
   const info = inspectLimit(limit);
   const missing = info.missing.slice();
   const unknown = info.unknown.slice();
@@ -43,9 +48,12 @@ export function mvdFromLimit(limit, technique, c, cUnit, lambda) {
   let lam = null;
   if (!isBlank(lambda)) lam = readPositive('lambda', lambda, faults);
 
-  const refusal = refusalFor({ missing, unknown, notAllowed: info.notAllowed, unitMismatch, faults });
-  if (refusal) return refusal;
+  return { info, missing, unknown, notAllowed: info.notAllowed.slice(), unitMismatch, faults, readsC, conc, lam };
+}
 
+// Builds the F03 result from a clean reading (no refusal applies).
+export function buildMvd(read, technique) {
+  const { info, readsC, conc, lam } = read;
   const parts = limitParts(info);
   const cValue = readsC ? conc : R(1);
   const lc = mul(info.L, cValue);
@@ -66,4 +74,11 @@ export function mvdFromLimit(limit, technique, c, cUnit, lambda) {
     presetId: parts.presetId,
     kFromPreset: parts.kFromPreset,
   });
+}
+
+export function mvdFromLimit(limit, technique, c, cUnit, lambda) {
+  const read = inspectMvd(limit, technique, c, cUnit, lambda);
+  const refusal = refusalFor(read);
+  if (refusal) return refusal;
+  return buildMvd(read, technique);
 }

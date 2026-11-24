@@ -15,6 +15,16 @@ const SRC = new URL('../src/e20/', import.meta.url);
 const FILES = readdirSync(SRC).sort();
 const textOf = (f) => readFileSync(new URL(f, SRC), 'utf8');
 
+const LIM = { form: 'typed', value: '0.5', unit: 'EU/mL', source: 's' };
+const SUIT = {
+  sampleCV: { value: '3', max: '5', source: 's' },
+  spikeCV: { value: '4', max: '5', source: 's' },
+  recovery: {
+    B: '12', A: '2', added: '10', basis: 'as-measured',
+    range: { form: 'declared', low: '50', high: '200', source: 's' },
+  },
+};
+
 // The calls every slice extends: [label, function, argument list].
 const CALLS = [
   ['listPresets', e20.listPresets, []],
@@ -46,12 +56,35 @@ const CALLS = [
   ['checkDilution above', e20.checkDilution, ['20', { num: '10', den: '1' }]],
   ['checkDilution incomplete', e20.checkDilution, [null, undefined]],
   ['checkDilution CCS-RF-03', e20.checkDilution, ['0.5', { num: '0', den: '1' }]],
+  // Slice C: F06 and F05. Each has a result, an incomplete and every refusal code it can give.
+  ['assessSuitability result', e20.assessSuitability, [SUIT]],
+  ['assessSuitability preset range', e20.assessSuitability, [{ ...SUIT, recovery: { ...SUIT.recovery, range: { form: 'preset', presetId: 'preset-4' } } }]],
+  ['assessSuitability outside', e20.assessSuitability, [{ ...SUIT, sampleCV: { value: '6', max: '5', source: 's' } }]],
+  ['assessSuitability notEntered', e20.assessSuitability, [null]],
+  ['assessSuitability incomplete', e20.assessSuitability, [{ sampleCV: { value: '3' } }]],
+  ['assessSuitability RC-01', e20.assessSuitability, [{ ...SUIT, recovery: { ...SUIT.recovery, basis: 'x' } }]],
+  ['assessSuitability RC-02', e20.assessSuitability, [{ ...SUIT, recovery: { ...SUIT.recovery, range: { form: 'preset', presetId: 'preset-5' } } }]],
+  ['assessSuitability CCS-RF-03', e20.assessSuitability, [{ ...SUIT, recovery: { ...SUIT.recovery, range: { form: 'declared', low: '9', high: '1', source: 's' } } }]],
+  ['assessSuitability wrong-form', e20.assessSuitability, ['text']],
+  ['assessResult equals', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '5', '4', '=', '0.8', 'lal', SUIT]],
+  ['assessResult less-than', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', null, '4', '<', '0.25', 'rfc', SUIT]],
+  ['assessResult mg', e20.assessResult, [{ form: 'km', K: '5', KSource: 's', M: '2', Munit: 'mg', MSource: 's' }, 'fluorimetric', '2', 'mg/mL', '0.05', '5', '4', '=', '10', 'lal', SUIT]],
+  ['assessResult all withheld', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '5', '20', '=', '0.8', null, null]],
+  ['assessResult suitability incomplete', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '5', '4', '=', '0.2', 'lal', { sampleCV: { value: '3' } }]],
+  ['assessResult suitability outside', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '5', '4', '=', '0.2', 'lal', { ...SUIT, spikeCV: { value: '9', max: '5', source: 's' } }]],
+  ['assessResult suitability rejected', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '5', '4', '=', '0.2', 'lal', 'text']],
+  ['assessResult incomplete', e20.assessResult, [null, null, null, null, null, null, null, null, null, null, null]],
+  ['assessResult RC-01', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '5', '4', '>=', '1', 'lal', SUIT]],
+  ['assessResult RC-02', e20.assessResult, [LIM, 'gel-clot', null, null, '0.05', '5', '4', '=', '1', 'lal', SUIT]],
+  ['assessResult RC-03', e20.assessResult, [{ form: 'typed', value: '1', unit: 'EU/mg', source: 's' }, 'chromogenic', '1', 'Units/mL', '0.05', '5', '4', '=', '1', 'lal', SUIT]],
+  ['assessResult CCS-RF-03 greater twice', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', null, '4', '>', '>5', 'lal', SUIT]],
+  ['assessResult CCS-RF-03 highest', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '0.01', '0.5', '=', '-1', 'lal', SUIT]],
 ];
 const run = () => CALLS.map(([label, fn, args]) => [label, fn(...args)]);
 
 const TEST_FILES = [
   'e20-names.test.js', 'e20-rules.test.js', 'e20-numeric.test.js', 'e20-name-scanner.js',
-  'e20-limit.test.js', 'e20-dilution.test.js',
+  'e20-limit.test.js', 'e20-dilution.test.js', 'e20-suitability.test.js', 'e20-result.test.js',
 ];
 
 test('AT-E20L-03 controls: all ten positives reported, no negative reported', () => {

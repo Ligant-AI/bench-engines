@@ -9,6 +9,9 @@ const num = (text, unit) => numeric(parse(text), unit);
 // The digits of presets 1 to 3, written once. F01 reads them from here, never from a copy.
 export const PRESET_DIGITS = Object.freeze({ 'preset-1': '5', 'preset-2': '0.2', 'preset-3': '0.5' });
 
+// The range of preset-4, written once. F06 reads it from here as well.
+export const PRESET_RANGE = Object.freeze({ low: '50', high: '200' });
+
 export function listPresets() {
   const presets = [
     { presetId: 'preset-1', kind: 'k', value: num(PRESET_DIGITS['preset-1'], 'EU/kg'), asWritten: PRESET_DIGITS['preset-1'] },
@@ -23,10 +26,10 @@ export function listPresets() {
     {
       presetId: 'preset-4',
       kind: 'range',
-      low: num('50', '%'),
-      high: num('200', '%'),
-      lowAsWritten: '50',
-      highAsWritten: '200',
+      low: num(PRESET_RANGE.low, '%'),
+      high: num(PRESET_RANGE.high, '%'),
+      lowAsWritten: PRESET_RANGE.low,
+      highAsWritten: PRESET_RANGE.high,
     },
     { presetId: 'preset-5', kind: 'r-criterion', value: num('0.980', null), asWritten: '0.980' },
   ];

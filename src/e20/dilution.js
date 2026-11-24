@@ -4,6 +4,36 @@ import { R, cmp, done } from '../core.js';
 import { MODULE, REASONS, isBlank, readText, readExact, refusalFor } from './shared.js';
 import { numeric } from './numeric.js';
 
+// Reads a DF argument (not blank). Returns the exact value, or null with its fault pushed.
+export function readDF(DF, faults) {
+  const got = readText(DF);
+  if (!got.ok) {
+    faults.push({ fields: ['DF'], reason: got.reason });
+    return null;
+  }
+  if (cmp(got.r, R(1)) < 0) {
+    faults.push({ fields: ['DF'], reason: REASONS.belowOne });
+    return null;
+  }
+  return got.r;
+}
+
+// The relation of two exact values and the members F04 and F05 both return.
+export function dilutionRelation(df, limitValue) {
+  const order = cmp(df, limitValue);
+  const relation = order < 0 ? 'below' : order === 0 ? 'equal' : 'above';
+  const a = numeric(df, null);
+  const b = numeric(limitValue, null);
+  return {
+    DF: a,
+    mvd: b,
+    relation,
+    permitted: relation !== 'above',
+    withheldReason: relation === 'above' ? 'df-above-mvd' : null,
+    printExact: a.display === b.display && order !== 0,
+  };
+}
+
 export function checkDilution(DF, mvd) {
   const missing = [];
   if (isBlank(DF)) missing.push('DF');
@@ -12,12 +42,7 @@ export function checkDilution(DF, mvd) {
   const faults = [];
   let df = null;
   let limitValue = null;
-  if (!isBlank(DF)) {
-    const got = readText(DF);
-    if (!got.ok) faults.push({ fields: ['DF'], reason: got.reason });
-    else if (cmp(got.r, R(1)) < 0) faults.push({ fields: ['DF'], reason: REASONS.belowOne });
-    else df = got.r;
-  }
+  if (!isBlank(DF)) df = readDF(DF, faults);
   if (!isBlank(mvd)) {
     const got = readExact(mvd, true);
     if (!got.ok) faults.push({ fields: ['mvd'], reason: got.reason });
@@ -26,17 +51,5 @@ export function checkDilution(DF, mvd) {
 
   const refusal = refusalFor({ missing, faults });
   if (refusal) return refusal;
-
-  const order = cmp(df, limitValue);
-  const relation = order < 0 ? 'below' : order === 0 ? 'equal' : 'above';
-  const a = numeric(df, null);
-  const b = numeric(limitValue, null);
-  return done(MODULE, {
-    DF: a,
-    mvd: b,
-    relation,
-    permitted: relation !== 'above',
-    withheldReason: relation === 'above' ? 'df-above-mvd' : null,
-    printExact: a.display === b.display && order !== 0,
-  });
+  return done(MODULE, dilutionRelation(df, limitValue));
 }

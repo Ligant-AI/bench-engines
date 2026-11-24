@@ -5,3 +5,5 @@ export { listPresets } from './presets.js';
 export { resolveLimit } from './limit.js';
 export { mvdFromLimit } from './mvd.js';
 export { checkDilution } from './dilution.js';
+export { assessSuitability } from './suitability.js';
+export { assessResult } from './result.js';
