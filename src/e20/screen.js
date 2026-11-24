@@ -101,7 +101,10 @@ function readCurve(cv, path, out) {
   const at = `${path}.channels`;
   if (isBlank(list) || (Array.isArray(list) && list.length === 0)) out.missing.push(at);
   else if (!Array.isArray(list)) out.faults.push(wrong(at));
-  else list.forEach((ch, j) => got.channels.push(readChannel(ch, `${at}[${j}]`, out)));
+  else {
+    // An index loop, not forEach: forEach skips the empty slots of a sparse array (E20L-IN-02).
+    for (let j = 0; j < list.length; j += 1) got.channels.push(readChannel(list[j], `${at}[${j}]`, out));
+  }
   return got;
 }
 
@@ -143,7 +146,10 @@ export function screenDilutions(limit, c, cUnit, recoveryRange, criterion, curve
   const read = [];
   if (isBlank(curves) || (Array.isArray(curves) && curves.length === 0)) out.missing.push('curves');
   else if (!Array.isArray(curves)) out.faults.push(wrong('curves'));
-  else curves.forEach((cv, i) => read.push(readCurve(cv, `curves[${i}]`, out)));
+  else {
+    // An index loop, not forEach: forEach skips the empty slots of a sparse array (E20L-IN-02).
+    for (let i = 0; i < curves.length; i += 1) read.push(readCurve(curves[i], `curves[${i}]`, out));
+  }
 
   const refusal = refusalFor({
     missing: out.missing, unknown: out.unknown, notAllowed: out.notAllowed, unitMismatch, faults: out.faults,

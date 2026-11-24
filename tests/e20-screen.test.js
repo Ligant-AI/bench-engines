@@ -205,6 +205,28 @@ test('F07 step 1: the missing names, zero-based, in nested order', () => {
   incomplete(screen([curve('1', [ch('1', '1')])], { range: { form: 'preset' } }), ['recoveryRange.presetId']);
 });
 
+test('F07 E20L-IN-02: an empty slot of a sparse array is not declared, named like a null element', () => {
+  const good = curve('1', [ch('1', '1')]);
+  const hole = (len, at, v) => { const a = new Array(len); if (at !== undefined) a[at] = v; return a; };
+  // holes in curves: at start, in the middle, and all holes
+  incomplete(screen(hole(2, 1, good)), ['curves[0]']);
+  incomplete(screen(hole(2, 0, good)), ['curves[1]']);
+  incomplete(screen([good, , good]), ['curves[1]']); // eslint-disable-line no-sparse-arrays
+  incomplete(screen(new Array(2)), ['curves[0]', 'curves[1]']);
+  incomplete(screen(new Array(1)), ['curves[0]']);
+  // the same as a null element
+  incomplete(screen([null, good]), ['curves[0]']);
+  // holes in channels: at start, in the middle, and all holes
+  const withChannels = (channels) => [{ lambda: '1', channels }];
+  incomplete(screen(withChannels(hole(2, 1, ch('1', '1')))), ['curves[0].channels[0]']);
+  incomplete(screen(withChannels(hole(2, 0, ch('1', '1')))), ['curves[0].channels[1]']);
+  incomplete(screen(withChannels([ch('1', '1'), , ch('1', '1')])), ['curves[0].channels[1]']); // eslint-disable-line no-sparse-arrays
+  incomplete(screen(withChannels(new Array(2))), ['curves[0].channels[0]', 'curves[0].channels[1]']);
+  incomplete(screen(withChannels(new Array(1))), ['curves[0].channels[0]']);
+  // a hole in the first curve with an r entered in a later one: the criterion is still read
+  incomplete(screen([, curve('1', [ch('1', '1')], '0.5')], { criterion: null }), ['criterion', 'curves[0]']); // eslint-disable-line no-sparse-arrays
+});
+
 test('F07 step 1: the limit parts, then c and cUnit when D is not mL, then the range, then curves', () => {
   const km = { form: 'km', K: '5', KSource: 's', M: '2', Munit: 'mg', MSource: 's' };
   incomplete(screen([curve('1', [ch('1', '1')])], { limit: km }), ['c', 'cUnit']);
