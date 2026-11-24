@@ -421,7 +421,7 @@ test('AT-E10R-12 version fields on every result and refusal', () => {
   ];
   for (const r of all) {
     assert.equal(r.engine.module, 'E10');
-    assert.equal(r.engine.version, '0.2.0');
+    assert.equal(r.engine.version, '0.3.0');
     assert.equal(r.engine.moduleVersion, '0.3.0');
   }
 });

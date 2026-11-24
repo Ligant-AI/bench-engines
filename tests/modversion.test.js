@@ -25,18 +25,18 @@ test('E7 results carry E7 MODULE_VERSION', () => {
 });
 
 // AT-E10C-15, AT-E10C-16, E10C-NF-05, E10C-ERR-1: literal version expectations
-// (package/engine 0.2.0, E10 module 0.3.0, E9 and E7 modules 0.1.0).
-test('E10 results and refusals carry engine.version 0.2.0 and moduleVersion 0.3.0', () => {
+// (package/engine 0.3.0, E10 module 0.3.0, E9 and E7 modules 0.1.0).
+test('E10 results and refusals carry engine.version 0.3.0 and moduleVersion 0.3.0', () => {
   for (const r of [e10.strengthFactor('2'), e10.strengthFactor(null), e10.splitVolumes('10', '2')]) {
     assert.equal(r.engine.module, 'E10');
-    assert.equal(r.engine.version, '0.2.0');
+    assert.equal(r.engine.version, '0.3.0');
     assert.equal(r.engine.moduleVersion, '0.3.0');
   }
 });
 
 test('E9 and E7 results carry engine.moduleVersion 0.1.0 literally', () => {
   for (const r of [e9.squareVolume('1', '0.1'), e7.poissonCV({ sumLive: '100', sumDead: '0' })]) {
-    assert.equal(r.engine.version, '0.2.0');
+    assert.equal(r.engine.version, '0.3.0');
     assert.equal(r.engine.moduleVersion, '0.1.0');
   }
 });

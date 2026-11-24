@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 - E20 module 0.1.0 added in `src/e20/` (T-0735; docs/engine-spec-e20-endotoxin-limit-mvd.md): `resolveLimit`, `listPresets`, `mvdFromLimit`, `checkDilution`, `assessResult`, `assessSuitability`, `screenDilutions`, `formatThreeFigures`, `checkRecordDates` (E20L-F01..F09). Exported from `src/index.js` as `e20`.
 - Additive only: no change to `src/core.js`, E7, E9 or E10, and no dependency. The package version and `src/version.js` are not changed here; the minor bump to 0.3.0 is made in the version commit (E20L-NF-06, section 2.4).
 
