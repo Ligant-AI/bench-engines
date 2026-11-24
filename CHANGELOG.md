@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- E20 module 0.1.0 added in `src/e20/` (T-0735; docs/engine-spec-e20-endotoxin-limit-mvd.md): `resolveLimit`, `listPresets`, `mvdFromLimit`, `checkDilution`, `assessResult`, `assessSuitability`, `screenDilutions`, `formatThreeFigures`, `checkRecordDates` (E20L-F01..F09). Exported from `src/index.js` as `e20`.
+- Additive only: no change to `src/core.js`, E7, E9 or E10, and no dependency. The package version and `src/version.js` are not changed here; the minor bump to 0.3.0 is made in the version commit (E20L-NF-06, section 2.4).
+
 ## 0.2.0
 - Package version 0.2.0 (KAITO-D187; additive minor bump, E10R-NF-05).
 - E10 module 0.3.0: scaling and activity E10R-F13..F16, F18..F23 added (`scaleToVolume`, `volumeFromAmount`, `balanceVolume`, `percentSolution`, `concentrateVolume`, `roundDeclared`, `activityToMass`, `massToActivity`, `activityAmountFromConcentration`, `volumeFill`), from docs/engine-spec-e10-scaling-activity.md r3.1 with its errata, E10R-AMD-1 and E10R-AMD-2-r2 with their errata. Engine.moduleVersion 0.3.0 on every E10 result and refusal.

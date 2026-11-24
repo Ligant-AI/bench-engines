@@ -25,6 +25,10 @@ const SUIT = {
   },
 };
 
+const RANGE = { form: 'declared', low: '50', high: '200', source: 's' };
+const CRIT5 = { form: 'preset', presetId: 'preset-5' };
+const CURVE = { lambda: '0.05', r: '-0.99', channels: [{ DF: '1', recovery: '100' }, { DF: '20', recovery: '60' }] };
+
 // The calls every slice extends: [label, function, argument list].
 const CALLS = [
   ['listPresets', e20.listPresets, []],
@@ -79,12 +83,24 @@ const CALLS = [
   ['assessResult RC-03', e20.assessResult, [{ form: 'typed', value: '1', unit: 'EU/mg', source: 's' }, 'chromogenic', '1', 'Units/mL', '0.05', '5', '4', '=', '1', 'lal', SUIT]],
   ['assessResult CCS-RF-03 greater twice', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', null, '4', '>', '>5', 'lal', SUIT]],
   ['assessResult CCS-RF-03 highest', e20.assessResult, [LIM, 'chromogenic', null, null, '0.05', '0.01', '0.5', '=', '-1', 'lal', SUIT]],
+  // Slice D: F07 and F09. Each has a result, an incomplete and every refusal code it can give.
+  ['screenDilutions result', e20.screenDilutions, [LIM, null, null, RANGE, CRIT5, [CURVE]]],
+  ['screenDilutions no limit', e20.screenDilutions, [null, null, null, RANGE, null, [{ lambda: '0.05', channels: [{ DF: '3', recovery: '90' }] }]]],
+  ['screenDilutions mg', e20.screenDilutions, [{ form: 'km', K: '5', KSource: 's', M: '3', Munit: 'mg', MSource: 's' }, '2', 'mg/mL', { form: 'preset', presetId: 'preset-4' }, { form: 'declared', value: '0.9', source: 's' }, [CURVE]]],
+  ['screenDilutions incomplete', e20.screenDilutions, [LIM, null, null, null, null, []]],
+  ['screenDilutions RC-01', e20.screenDilutions, [LIM, null, null, { form: 'x' }, null, [CURVE]]],
+  ['screenDilutions RC-02', e20.screenDilutions, [LIM, null, null, { form: 'preset', presetId: 'preset-1' }, null, [CURVE]]],
+  ['screenDilutions RC-03', e20.screenDilutions, [{ form: 'typed', value: '1', unit: 'EU/mg', source: 's' }, '1', 'Units/mL', RANGE, null, [CURVE]]],
+  ['screenDilutions CCS-RF-03', e20.screenDilutions, [LIM, null, null, { form: 'declared', low: '9', high: '1', source: 's' }, CRIT5, [{ lambda: '0', r: '2', channels: [{ DF: '0.5', recovery: 'x' }] }]]],
+  ['checkRecordDates result', e20.checkRecordDates, ['2026-05-02', '2026-05-01', 'nonsense']],
+  ['checkRecordDates wrong-form', e20.checkRecordDates, [5, '2026-05-01', null]],
 ];
 const run = () => CALLS.map(([label, fn, args]) => [label, fn(...args)]);
 
 const TEST_FILES = [
   'e20-names.test.js', 'e20-rules.test.js', 'e20-numeric.test.js', 'e20-name-scanner.js',
   'e20-limit.test.js', 'e20-dilution.test.js', 'e20-suitability.test.js', 'e20-result.test.js',
+  'e20-screen.test.js', 'e20-dates.test.js', 'e20-order.test.js', 'e20-purity.test.js',
 ];
 
 test('AT-E20L-03 controls: all ten positives reported, no negative reported', () => {

@@ -5,14 +5,15 @@ import { MODULE, REASONS, isBlank, readText, readExact, refusalFor } from './sha
 import { numeric } from './numeric.js';
 
 // Reads a DF argument (not blank). Returns the exact value, or null with its fault pushed.
-export function readDF(DF, faults) {
+// `name` is the field the fault names; F07 gives the path of a channel member.
+export function readDF(DF, faults, name = 'DF') {
   const got = readText(DF);
   if (!got.ok) {
-    faults.push({ fields: ['DF'], reason: got.reason });
+    faults.push({ fields: [name], reason: got.reason });
     return null;
   }
   if (cmp(got.r, R(1)) < 0) {
-    faults.push({ fields: ['DF'], reason: REASONS.belowOne });
+    faults.push({ fields: [name], reason: REASONS.belowOne });
     return null;
   }
   return got.r;

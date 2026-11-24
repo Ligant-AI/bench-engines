@@ -6,6 +6,8 @@ The shared calculation engines of the Ligant Bench Tools programme: engines E1 t
 
 **Versions (T-0641, KAITO-D187):** package 0.2.0, E10 module 0.3.0, E9 and E7 modules 0.1.0. E10 now holds the conversions (E10C-F03..F12) and the scaling and activity functions E10R-F13..F16, F18..F23 (`scaleToVolume`, `volumeFromAmount`, `balanceVolume`, `percentSolution`, `concentrateVolume`, `roundDeclared`, `activityToMass`, `massToActivity`, `activityAmountFromConcentration`, `volumeFill`), specified in `docs/engine-spec-e10-scaling-activity*.md`.
 
+**E20 (T-0735, unreleased):** the endotoxin limit and maximum valid dilution module, in `src/e20/`, specified in `docs/engine-spec-e20-endotoxin-limit-mvd.md`. Nine functions (E20L-F01..F09): `resolveLimit`, `listPresets`, `mvdFromLimit`, `checkDilution`, `assessResult`, `assessSuitability`, `screenDilutions`, `formatThreeFigures`, `checkRecordDates`; exported as `e20` from the package index. Exact rational arithmetic on decimal-text inputs, no result member is a JS number, no dependency. Module line 0.1.0; the package version bump belongs to the version commit.
+
 ## Rules that make this a package and not code in each tool
 
 1. **One implementation in the suite.** A second copy of any engine function inside a tool is refused at acceptance (cat1 NAD-2026-10-24-547(6); -1206; -1209). Tools import from here.

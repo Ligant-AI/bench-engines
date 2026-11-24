@@ -13,6 +13,28 @@ function expectedUnit(info) {
   return `${info.label}/mL`;
 }
 
+// Reads c and cUnit, which are read only when the denominator is known and is not mL
+// (E20L-IN-04). Pushes the missing names and the value faults onto the lists given. Returns
+// whether they are read, the E20-RC-03 verdict and the value of c. F03 and F07 both use it.
+export function readConcentration(info, c, cUnit, missing, faults) {
+  const readsC = info.kind !== null && info.kind !== 'mL';
+  if (readsC) {
+    if (isBlank(c)) missing.push('c');
+    if (isBlank(cUnit)) missing.push('cUnit');
+  }
+  // E20-RC-03 is judged only when the denominator is known and the unit is text, and for
+  // "other" only when its label is text.
+  const unitIsText = typeof cUnit === 'string' && !isBlank(cUnit);
+  const labelIsText = info.kind !== 'other' || info.label !== null;
+  const unitMismatch = readsC && unitIsText && labelIsText && cUnit !== expectedUnit(info);
+  let conc = null;
+  if (readsC && !isBlank(c)) conc = readPositive('c', c, faults);
+  if (readsC && !isBlank(cUnit) && typeof cUnit !== 'string') {
+    faults.push({ fields: ['cUnit'], reason: REASONS.wrongForm });
+  }
+  return { readsC, unitMismatch, conc };
+}
+
 // Reads limit, technique, c, cUnit and lambda in argument order. Returns the names that are
 // missing (step 1), unknown or not allowed (step 2), the unit mismatch (step 2) and the value
 // faults (step 3), with the values that were read.
@@ -22,29 +44,12 @@ export function inspectMvd(limit, technique, c, cUnit, lambda) {
   const unknown = info.unknown.slice();
   const faults = info.faults.slice();
 
-  // Step (1) and step (2): technique, then c and cUnit only when the denominator is known
-  // and is not mL (E20L-IN-04), then lambda.
+  // Technique, then c and cUnit, then lambda.
   if (isBlank(technique)) missing.push('technique');
   else if (!isKnown(CLOSED_STRINGS.technique, technique)) unknown.push('technique');
-  const readsC = info.kind !== null && info.kind !== 'mL';
-  if (readsC) {
-    if (isBlank(c)) missing.push('c');
-    if (isBlank(cUnit)) missing.push('cUnit');
-  }
+  const { readsC, unitMismatch, conc } = readConcentration(info, c, cUnit, missing, faults);
   if (isBlank(lambda)) missing.push('lambda');
 
-  // E20-RC-03 is judged only when the denominator is known and the unit is text, and for
-  // "other" only when its label is text.
-  const unitIsText = typeof cUnit === 'string' && !isBlank(cUnit);
-  const labelIsText = info.kind !== 'other' || info.label !== null;
-  const unitMismatch = readsC && unitIsText && labelIsText && cUnit !== expectedUnit(info);
-
-  // Step (3): value faults in argument order.
-  let conc = null;
-  if (readsC && !isBlank(c)) conc = readPositive('c', c, faults);
-  if (readsC && !isBlank(cUnit) && typeof cUnit !== 'string') {
-    faults.push({ fields: ['cUnit'], reason: REASONS.wrongForm });
-  }
   let lam = null;
   if (!isBlank(lambda)) lam = readPositive('lambda', lambda, faults);
 

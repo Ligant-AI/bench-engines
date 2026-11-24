@@ -60,9 +60,14 @@ function readCV(root, key, out) {
 
 function readRange(rec, out) {
   const path = `${P}.recovery.range`;
-  const got = { low: null, high: null };
   const o = slotOf(rec, 'range', path, out);
-  if (!o) return got;
+  if (!o) return { low: null, high: null };
+  return readRangeMembers(o, path, out);
+}
+
+// The members of a range object, named under `path`. F06 and F07 both read a range by this code.
+export function readRangeMembers(o, path, out) {
+  const got = { low: null, high: null };
   for (const m of ['form', 'low', 'high', 'source', 'presetId']) see(out, o[m]);
   const form = o.form;
   if (isBlank(form)) {

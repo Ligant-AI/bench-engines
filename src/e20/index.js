@@ -7,3 +7,5 @@ export { mvdFromLimit } from './mvd.js';
 export { checkDilution } from './dilution.js';
 export { assessSuitability } from './suitability.js';
 export { assessResult } from './result.js';
+export { screenDilutions } from './screen.js';
+export { checkRecordDates } from './dates.js';

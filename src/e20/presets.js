@@ -12,6 +12,9 @@ export const PRESET_DIGITS = Object.freeze({ 'preset-1': '5', 'preset-2': '0.2',
 // The range of preset-4, written once. F06 reads it from here as well.
 export const PRESET_RANGE = Object.freeze({ low: '50', high: '200' });
 
+// The |r| criterion of preset-5, written once. F07 reads it from here as well.
+export const PRESET_R = '0.980';
+
 export function listPresets() {
   const presets = [
     { presetId: 'preset-1', kind: 'k', value: num(PRESET_DIGITS['preset-1'], 'EU/kg'), asWritten: PRESET_DIGITS['preset-1'] },
@@ -31,7 +34,7 @@ export function listPresets() {
       lowAsWritten: PRESET_RANGE.low,
       highAsWritten: PRESET_RANGE.high,
     },
-    { presetId: 'preset-5', kind: 'r-criterion', value: num('0.980', null), asWritten: '0.980' },
+    { presetId: 'preset-5', kind: 'r-criterion', value: num(PRESET_R, null), asWritten: PRESET_R },
   ];
   return done(MODULE, { presets });
 }
