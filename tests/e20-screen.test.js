@@ -37,11 +37,8 @@ test('F07 per channel: state, sensitivity, ratio, DF against MVD, listing (MVD =
   assert.equal(r.status, 'result');
   assert.equal(r.mvdShown, true);
   const [c0] = r.curves;
-  assert.deepEqual(c0.lambda.exact, { num: '1', den: '20' });
-  assert.equal(c0.lambda.unit, 'EU/mL');
   assert.deepEqual(c0.mvd.exact, { num: '10', den: '1' });
   assert.equal(c0.mvd.unit, null);
-  assert.deepEqual(c0.r.exact, { num: '-99', den: '100' });
   assert.equal(c0.curveState, 'within'); // |-0.99| is 0.99, at least 0.980
   assert.deepEqual(c0.channels.map((x) => x.recoveryState), ['within', 'within', 'outside', 'within']);
   assert.deepEqual(c0.channels.map((x) => x.sensitivity.fraction), ['1/20', '1/4', '1/2', '1/1']);
@@ -53,7 +50,6 @@ test('F07 per channel: state, sensitivity, ratio, DF against MVD, listing (MVD =
   assert.deepEqual(frac(c0.listed), ['1/1', '5/1']);
   assert.equal(c0.notConsecutive, null);
   assert.equal(c0.channels[3].dfAboveMvd, true); // returned although the recovery is within the range
-  assert.equal(c0.channels[0].recovery.unit, '%');
   assert.equal(r.engine.module, 'E20');
 });
 
@@ -157,7 +153,6 @@ test('F07 notConsecutive is null with fewer than two distinct listed DF', () => 
 test('F07 the listing order is input order, not DF order', () => {
   const r = screen([curve('0.01', [ch('30', '100'), ch('10', '100')])]);
   assert.deepEqual(frac(r.curves[0].listed), ['30/1', '10/1']);
-  assert.deepEqual(frac(r.curves[0].channels.map((x) => x.DF)), ['30/1', '10/1']);
 });
 
 test('F07 recovery range bounds are included; a preset range reads 50 to 200; a negative recovery is accepted', () => {

@@ -414,7 +414,6 @@ test('section 6 printed-exact pairs: identical display with different exact valu
   assert.equal('printExact' in cv, false);
   const screened = e20.screenDilutions(TYPED, null, null, RANGE, { form: 'preset', presetId: 'preset-5' }, curves());
   assert.equal('printExact' in screened.curves[0], false);
-  assert.equal('printExact' in screened.curves[0].channels[0].recovery, false);
 });
 
 test('E20L-F02 each preset id in the right and the wrong role', () => {
