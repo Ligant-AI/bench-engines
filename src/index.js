@@ -2,6 +2,7 @@ export { ENGINE_VERSION, engineVersionLine } from './version.js';
 export * as e9 from './e9/index.js';
 export * as e7 from './e7/index.js';
 export * as e10 from './e10/index.js';
+export * as e20 from './e20/index.js';
 import { ENGINE_VERSION as V } from './version.js';
 import * as _e9 from './e9/index.js';
 import * as _e7 from './e7/index.js';
