@@ -6,16 +6,19 @@ import { numeric } from './numeric.js';
 
 const num = (text, unit) => numeric(parse(text), unit);
 
+// The digits of presets 1 to 3, written once. F01 reads them from here, never from a copy.
+export const PRESET_DIGITS = Object.freeze({ 'preset-1': '5', 'preset-2': '0.2', 'preset-3': '0.5' });
+
 export function listPresets() {
   const presets = [
-    { presetId: 'preset-1', kind: 'k', value: num('5', 'EU/kg'), asWritten: '5' },
-    { presetId: 'preset-2', kind: 'k', value: num('0.2', 'EU/kg'), asWritten: '0.2' },
+    { presetId: 'preset-1', kind: 'k', value: num(PRESET_DIGITS['preset-1'], 'EU/kg'), asWritten: PRESET_DIGITS['preset-1'] },
+    { presetId: 'preset-2', kind: 'k', value: num(PRESET_DIGITS['preset-2'], 'EU/kg'), asWritten: PRESET_DIGITS['preset-2'] },
     {
       presetId: 'preset-3',
       kind: 'limit',
-      value: num('0.5', 'EU/mL'),
+      value: num(PRESET_DIGITS['preset-3'], 'EU/mL'),
       denominator: { kind: 'mL', label: 'mL' },
-      asWritten: '0.5',
+      asWritten: PRESET_DIGITS['preset-3'],
     },
     {
       presetId: 'preset-4',

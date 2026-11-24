@@ -23,10 +23,36 @@ const CALLS = [
   ['formatThreeFigures blank', e20.formatThreeFigures, ['  ']],
   ['formatThreeFigures number', e20.formatThreeFigures, [5]],
   ['formatThreeFigures text', e20.formatThreeFigures, ['2e5']],
+  // Slice B: F01, F03, F04. Each has a result, an incomplete and every refusal code it can give.
+  ['resolveLimit typed', e20.resolveLimit, [{ form: 'typed', value: '0.5', unit: 'EU/mL', source: 's' }]],
+  ['resolveLimit typed other', e20.resolveLimit, [{ form: 'typed', value: '2', unit: 'other', otherLabel: 'jar', source: 's' }]],
+  ['resolveLimit km', e20.resolveLimit, [{ form: 'km', K: '5', KSource: 's', M: '3', Munit: 'mg', MSource: 's' }]],
+  ['resolveLimit preset-1', e20.resolveLimit, [{ form: 'preset', presetId: 'preset-1', M: '7', Munit: 'Unit', MSource: 's' }]],
+  ['resolveLimit preset-3', e20.resolveLimit, [{ form: 'preset', presetId: 'preset-3' }]],
+  ['resolveLimit incomplete', e20.resolveLimit, [null]],
+  ['resolveLimit RC-01', e20.resolveLimit, [{ form: 'other' }]],
+  ['resolveLimit RC-02', e20.resolveLimit, [{ form: 'preset', presetId: 'preset-4' }]],
+  ['resolveLimit CCS-RF-03', e20.resolveLimit, [{ form: 'typed', value: '0', unit: 'EU/mL', source: 's' }]],
+  ['resolveLimit wrong-form', e20.resolveLimit, ['text']],
+  ['mvdFromLimit mL', e20.mvdFromLimit, [{ form: 'typed', value: '0.5', unit: 'EU/mL', source: 's' }, 'chromogenic', null, null, '0.03']],
+  ['mvdFromLimit mg', e20.mvdFromLimit, [{ form: 'km', K: '5', KSource: 's', M: '3', Munit: 'mg', MSource: 's' }, 'gel-clot', '2', 'mg/mL', '0.25']],
+  ['mvdFromLimit other', e20.mvdFromLimit, [{ form: 'typed', value: '2', unit: 'other', otherLabel: 'jar', source: 's' }, 'turbidimetric', '2', 'jar/mL', '0.25']],
+  ['mvdFromLimit incomplete', e20.mvdFromLimit, [null, null, null, null, null]],
+  ['mvdFromLimit RC-01', e20.mvdFromLimit, [{ form: 'typed', value: '0.5', unit: 'EU/mL', source: 's' }, 'other', null, null, '1']],
+  ['mvdFromLimit RC-02', e20.mvdFromLimit, [{ form: 'preset', presetId: 'preset-5' }, 'chromogenic', null, null, '1']],
+  ['mvdFromLimit RC-03', e20.mvdFromLimit, [{ form: 'typed', value: '1', unit: 'EU/mg', source: 's' }, 'chromogenic', '1', 'Units/mL', '1']],
+  ['mvdFromLimit CCS-RF-03', e20.mvdFromLimit, [{ form: 'typed', value: '1', unit: 'EU/mL', source: 's' }, 'chromogenic', null, null, '0']],
+  ['checkDilution below', e20.checkDilution, ['10', { num: '10001', den: '1000' }]],
+  ['checkDilution above', e20.checkDilution, ['20', { num: '10', den: '1' }]],
+  ['checkDilution incomplete', e20.checkDilution, [null, undefined]],
+  ['checkDilution CCS-RF-03', e20.checkDilution, ['0.5', { num: '0', den: '1' }]],
 ];
 const run = () => CALLS.map(([label, fn, args]) => [label, fn(...args)]);
 
-const TEST_FILES = ['e20-names.test.js', 'e20-rules.test.js', 'e20-numeric.test.js', 'e20-name-scanner.js'];
+const TEST_FILES = [
+  'e20-names.test.js', 'e20-rules.test.js', 'e20-numeric.test.js', 'e20-name-scanner.js',
+  'e20-limit.test.js', 'e20-dilution.test.js',
+];
 
 test('AT-E20L-03 controls: all ten positives reported, no negative reported', () => {
   assert.equal(POSITIVE_NAMES.length + 1, 10);
@@ -109,6 +135,15 @@ test('AT-E20L-04 an extra member or argument of a Mode B name changes no result'
   }
   assert.deepEqual(e20.formatThreeFigures('12345', 70, '1'), e20.formatThreeFigures('12345'));
   assert.deepEqual(e20.listPresets(70, { weight: '70' }), e20.listPresets());
+  const typed = { form: 'typed', value: '0.5', unit: 'EU/mL', source: 's' };
+  const baseLimit = e20.resolveLimit(typed);
+  const baseMvd = e20.mvdFromLimit(typed, 'chromogenic', null, null, '0.03');
+  for (const extra of ['weight', 'volumeToGive', 'time', 'duration', 'hours', 'kg']) {
+    assert.deepEqual(e20.resolveLimit({ ...typed, [extra]: '70' }), baseLimit, extra);
+    assert.deepEqual(e20.mvdFromLimit({ ...typed, [extra]: '70' }, 'chromogenic', null, null, '0.03', '70'), baseMvd, extra);
+  }
+  const mvd = { num: '10', den: '1' };
+  assert.deepEqual(e20.checkDilution('2', mvd, '70', { weight: '70' }), e20.checkDilution('2', mvd));
 });
 
 test('AT-E20L-05 no member of any returned object, at any depth, is a JS number', () => {
