@@ -2,7 +2,7 @@
 import { R, cmp, div, sub, parse, toNumber, incomplete, rejected, done, missingOf, registerModule } from '../core.js';
 
 export const MODULE = 'E10';
-export const MODULE_VERSION = '0.2.0';
+export const MODULE_VERSION = '0.3.0';
 registerModule(MODULE, MODULE_VERSION);
 const M = MODULE;
 
@@ -12,6 +12,14 @@ export {
   molesToCopies, copiesToMoles, massToCopies, copiesToMass, amountFromConcentration,
 } from './conversions.js';
 export { UNITS, N_A } from './units.js';
+
+// E10R-F13 to E10R-F16, F18, F19, F22; F20, F21; F23 (docs/engine-spec-e10-scaling-activity*.md)
+export {
+  scaleToVolume, volumeFromAmount, balanceVolume, percentSolution, concentrateVolume,
+  roundDeclared, activityAmountFromConcentration,
+} from './scaling.js';
+export { activityToMass, massToActivity } from './activity.js';
+export { volumeFill } from './fill.js';
 
 // 3.1: f = P, "1 part cell suspension in P parts total". CCS-DT-01, CCS-FL-01.
 export function strengthFactor(P, dyeNamed = null) {
